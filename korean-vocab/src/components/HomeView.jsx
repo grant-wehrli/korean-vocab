@@ -1,16 +1,53 @@
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { BUILTIN_VOCAB } from '../data/vocab';
 import AccountButton from './AccountButton';
 
-export default function HomeView({ store, allSets, auth, onSignIn, onStudy, onStats, onImport }) {
+const MODES = [
+  { id: 'recall', label: 'Recall' },
+  { id: 'mcq', label: 'MCQ' },
+  { id: 'reverse', label: 'Reverse' },
+];
+
+export default function HomeView({ store, allSets, auth, onSignIn, onStart, onStats, onImport }) {
+  const [selected, setSelected] = useState(() => new Set(Object.keys(allSets)));
+  const [mode, setMode] = useState('recall');
+  const [forceAll, setForceAll] = useState(false);
+
   const stats = useMemo(() => store.getStats(), [store]);
-  const totalWords = useMemo(() =>
-    Object.values(allSets).reduce((s, w) => s + w.length, 0), [allSets]);
+
+  const selectedWords = useMemo(
+    () => [...selected].flatMap(name => allSets[name] || []),
+    [selected, allSets],
+  );
+
+  const dueCount = useMemo(
+    () => forceAll ? selectedWords.length : store.getDueCards(selectedWords).length,
+    [selectedWords, store, forceAll],
+  );
+
+  function toggle(name) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(name) ? next.delete(name) : next.add(name);
+      return next;
+    });
+  }
+
+  function handleStart() {
+    if (selectedWords.length === 0 || dueCount === 0) return;
+    onStart({ words: selectedWords, mode, forceAll });
+  }
+
+  const startLabel = selected.size === 0
+    ? 'Select a set'
+    : dueCount === 0
+    ? 'No cards due'
+    : `▶  Start — ${dueCount} card${dueCount !== 1 ? 's' : ''}${forceAll ? ' (all)' : ''}`;
 
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <div style={{ padding: '48px 24px 24px', textAlign: 'center', position: 'relative' }}>
+      <div style={{ padding: '32px 24px 16px', textAlign: 'center', position: 'relative' }}>
         {auth && (
           <div style={{ position: 'absolute', top: 16, right: 16 }}>
             <AccountButton auth={auth} onSignIn={onSignIn} />
@@ -24,7 +61,7 @@ export default function HomeView({ store, allSets, auth, onSignIn, onStudy, onSt
             letterSpacing: '-0.02em',
             color: 'var(--text)',
             lineHeight: 1,
-          }}>한국어</div>
+          }}>단어</div>
           <div className="display" style={{
             fontSize: '0.78rem',
             letterSpacing: '0.18em',
@@ -35,83 +72,129 @@ export default function HomeView({ store, allSets, auth, onSignIn, onStudy, onSt
         </div>
       </div>
 
-      {/* Stats strip */}
-      <div className="anim-fade-up container" style={{ animationDelay: '80ms', paddingBottom: 8 }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 10,
-          marginBottom: 24,
-        }}>
-          {[
-            { label: 'total', value: totalWords, color: 'var(--text2)' },
-            { label: 'tracked', value: stats.total, color: 'var(--accent)' },
-            { label: 'due now', value: stats.due, color: stats.due > 0 ? 'var(--yellow)' : 'var(--green)' },
-          ].map(s => (
-            <div key={s.label} className="card" style={{ textAlign: 'center', padding: '14px 10px' }}>
-              <div style={{ fontSize: '1.6rem', fontWeight: 700, color: s.color, fontFamily: "'Syne', sans-serif" }}>{s.value}</div>
-              <div style={{ fontSize: '0.68rem', color: 'var(--text3)', letterSpacing: '0.06em', marginTop: 2 }}>{s.label}</div>
-            </div>
+      {/* Compact stats */}
+      <div className="anim-fade-up container" style={{ animationDelay: '60ms', paddingBottom: 0 }}>
+        <div style={{ fontSize: '0.8rem', color: 'var(--text3)', textAlign: 'center', marginBottom: 20 }}>
+          <span style={{ color: stats.due > 0 ? 'var(--yellow)' : 'var(--green)', fontWeight: 600 }}>
+            {stats.due} due
+          </span>
+          {stats.total > 0 && (
+            <>
+              <span style={{ margin: '0 8px' }}>·</span>
+              <span style={{ color: 'var(--text2)' }}>{stats.mature} / {stats.total} mature</span>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="container anim-fade-up" style={{ animationDelay: '100ms', flex: 1 }}>
+        {/* Set selection */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+          {Object.entries(allSets).map(([name, words]) => {
+            const isSelected = selected.has(name);
+            const isCustom = !(name in BUILTIN_VOCAB);
+            const due = store.getDueCards(words).length;
+            return (
+              <button
+                key={name}
+                onClick={() => toggle(name)}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '12px 14px',
+                  background: isSelected ? 'rgba(0,199,190,0.10)' : 'var(--surface)',
+                  border: `1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`,
+                  borderRadius: 'var(--radius)',
+                  cursor: 'pointer',
+                  transition: 'all 0.12s',
+                  textAlign: 'left',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{
+                    width: 18, height: 18,
+                    borderRadius: 4,
+                    border: `2px solid ${isSelected ? 'var(--accent)' : 'var(--border2)'}`,
+                    background: isSelected ? 'var(--accent)' : 'transparent',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '0.65rem', color: '#000', flexShrink: 0,
+                    transition: 'all 0.12s',
+                  }}>
+                    {isSelected && '✓'}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text)' }}>{name}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text3)', marginTop: 1 }}>
+                      {words.length}w · {due} due
+                    </div>
+                  </div>
+                </div>
+                {isCustom && <span className="tag tag-yellow">custom</span>}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Mode pills */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          {MODES.map(m => (
+            <button
+              key={m.id}
+              onClick={() => setMode(m.id)}
+              style={{
+                flex: 1,
+                padding: '9px 0',
+                background: mode === m.id ? 'rgba(0,199,190,0.12)' : 'var(--surface)',
+                border: `1px solid ${mode === m.id ? 'var(--accent)' : 'var(--border)'}`,
+                borderRadius: 'var(--radius-sm)',
+                color: mode === m.id ? 'var(--accent)' : 'var(--text3)',
+                fontSize: '0.78rem',
+                fontWeight: mode === m.id ? 600 : 400,
+                cursor: 'pointer',
+                transition: 'all 0.12s',
+              }}
+            >
+              {m.label}
+            </button>
           ))}
         </div>
 
-        {/* Progress bar */}
-        {stats.total > 0 && (
-          <div style={{ marginBottom: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text3)' }}>mastery</span>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text2)' }}>{stats.mature} / {stats.total} mature</span>
-            </div>
-            <div style={{ height: 4, background: 'var(--surface2)', borderRadius: 999, overflow: 'hidden' }}>
-              <div style={{
-                height: '100%',
-                width: `${(stats.mature / Math.max(stats.total, 1)) * 100}%`,
-                background: 'linear-gradient(90deg, var(--accent), var(--green))',
-                borderRadius: 999,
-                animation: 'progressFill 0.8s ease 0.3s both',
-              }} />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Main actions */}
-      <div className="container anim-fade-up" style={{ animationDelay: '140ms', flex: 1 }}>
-        <button className="btn btn-primary btn-full btn-lg" onClick={onStudy} style={{ marginBottom: 10 }}>
-          <span>▶</span>
-          <span>{stats.due > 0 ? `Study (${stats.due} due)` : 'Study'}</span>
+        {/* Study all toggle */}
+        <button
+          onClick={() => setForceAll(p => !p)}
+          style={{
+            width: '100%',
+            padding: '10px 14px',
+            background: forceAll ? 'rgba(255,214,10,0.06)' : 'var(--surface)',
+            border: `1px solid ${forceAll ? 'var(--yellow)' : 'var(--border)'}`,
+            borderRadius: 'var(--radius-sm)',
+            cursor: 'pointer',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            marginBottom: 16,
+            transition: 'all 0.12s',
+          }}
+        >
+          <span style={{ fontSize: '0.8rem', color: 'var(--text2)' }}>Study all cards</span>
+          <span style={{ fontSize: '0.75rem', color: forceAll ? 'var(--yellow)' : 'var(--text3)' }}>
+            {forceAll ? 'on' : 'due only'}
+          </span>
         </button>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
-          <button className="btn btn-ghost" onClick={onStats}>
-            ↗ Stats
-          </button>
-          <button className="btn btn-ghost" onClick={onImport}>
-            + Import
-          </button>
-        </div>
+        {/* Start */}
+        <button
+          className="btn btn-primary btn-full btn-lg"
+          onClick={handleStart}
+          disabled={selected.size === 0 || dueCount === 0}
+          style={{ marginBottom: 14, opacity: (selected.size === 0 || dueCount === 0) ? 0.4 : 1 }}
+        >
+          {startLabel}
+        </button>
 
-        {/* Vocab sets overview */}
-        <div style={{ marginBottom: 32 }}>
-          <div style={{ fontSize: '0.72rem', letterSpacing: '0.1em', color: 'var(--text3)', marginBottom: 12, textTransform: 'uppercase' }}>
-            Available Sets
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {Object.entries(allSets).map(([name, words]) => {
-              const isCustom = !(name in BUILTIN_VOCAB);
-              return (
-                <div key={name} className="card" style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.85rem' }}>{name}</span>
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    <span className={`tag ${isCustom ? 'tag-yellow' : 'tag-dim'}`}>
-                      {isCustom ? 'custom' : 'built-in'}
-                    </span>
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text3)' }}>{words.length}w</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        {/* Secondary links */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 32 }}>
+          <button className="btn btn-ghost" onClick={onStats}>↗ Stats</button>
+          <button className="btn btn-ghost" onClick={onImport}>+ Import</button>
         </div>
       </div>
     </div>

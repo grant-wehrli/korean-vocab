@@ -60,7 +60,7 @@ export default function AuthView({ auth, onGuest }) {
           fontWeight: 700,
           color: 'var(--text)',
           lineHeight: 1,
-        }}>한국어</div>
+        }}>단어</div>
         <div className="display" style={{
           fontSize: '0.78rem',
           letterSpacing: '0.18em',

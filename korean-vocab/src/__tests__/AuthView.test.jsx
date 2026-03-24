@@ -17,7 +17,7 @@ function makeAuth(overrides = {}) {
 describe('AuthView', () => {
   it('renders the app title', () => {
     render(<AuthView auth={makeAuth()} onGuest={vi.fn()} />);
-    expect(screen.getByText('한국어')).toBeInTheDocument();
+    expect(screen.getByText('단어')).toBeInTheDocument();
     expect(screen.getByText('Vocabulary Trainer')).toBeInTheDocument();
   });
 

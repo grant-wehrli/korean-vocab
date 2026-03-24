@@ -3,6 +3,14 @@ import { shuffle, buildQueue, flexMatch } from '../utils/quizHelpers';
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
+function AutoAdvance({ delay, onAdvance, children }) {
+  useEffect(() => {
+    const t = setTimeout(onAdvance, delay);
+    return () => clearTimeout(t);
+  }, []);
+  return children;
+}
+
 function RecallQuiz({ card, onResult }) {
   const [answer, setAnswer] = useState('');
   const [phase, setPhase] = useState('input'); // input | correct | wrong
@@ -72,72 +80,40 @@ function RecallQuiz({ card, onResult }) {
       )}
 
       {phase === 'correct' && (
-        <div key={`correct-${animKey}`} className="anim-pop" style={{ marginTop: 32 }}>
-          <div style={{
-            background: 'rgba(48,209,88,0.08)',
-            border: '1px solid rgba(48,209,88,0.3)',
-            borderRadius: 'var(--radius)',
-            padding: '16px',
-            marginBottom: 16,
-          }}>
-            <div style={{ color: 'var(--green)', fontSize: '0.78rem', marginBottom: 4 }}>✓ Correct</div>
-            <div style={{ color: 'var(--text)', fontSize: '0.92rem' }}>{card.en}</div>
+        <AutoAdvance key={`correct-${animKey}`} delay={700} onAdvance={() => onResult(4)}>
+          <div className="anim-pop" style={{ marginTop: 32 }}>
+            <div style={{
+              background: 'rgba(48,209,88,0.08)',
+              border: '1px solid rgba(48,209,88,0.3)',
+              borderRadius: 'var(--radius)',
+              padding: '16px',
+            }}>
+              <div style={{ color: 'var(--green)', fontSize: '0.78rem', marginBottom: 4 }}>✓ Correct</div>
+              <div style={{ color: 'var(--text)', fontSize: '0.92rem' }}>{card.en}</div>
+            </div>
           </div>
-          <div style={{ marginBottom: 8, fontSize: '0.78rem', color: 'var(--text3)' }}>How confident were you?</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
-            {[
-              { q: 3, label: 'Guessed', color: 'var(--yellow)' },
-              { q: 4, label: 'Knew it', color: 'var(--green)' },
-              { q: 5, label: 'Instant', color: 'var(--accent)' },
-            ].map(({ q, label, color }) => (
-              <button
-                key={q}
-                className="btn"
-                onClick={() => onResult(q)}
-                style={{ border: `1px solid ${color}`, color, background: 'transparent', fontFamily: "'DM Mono', monospace" }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
+        </AutoAdvance>
       )}
 
       {phase === 'wrong' && (
-        <div key={`wrong-${animKey}`} className="anim-shake" style={{ marginTop: 32 }}>
-          <div style={{
-            background: 'rgba(255,55,95,0.08)',
-            border: '1px solid rgba(255,55,95,0.3)',
-            borderRadius: 'var(--radius)',
-            padding: '16px',
-            marginBottom: 16,
-          }}>
-            <div style={{ color: 'var(--red)', fontSize: '0.78rem', marginBottom: 4 }}>✗ Incorrect</div>
-            <div style={{ color: 'var(--text2)', fontSize: '0.82rem', marginBottom: 6 }}>
-              You: <span style={{ color: 'var(--text)' }}>{answer}</span>
-            </div>
-            <div style={{ color: 'var(--text2)', fontSize: '0.82rem' }}>
-              Answer: <span style={{ color: 'var(--text)' }}>{card.en}</span>
+        <AutoAdvance key={`wrong-${animKey}`} delay={1400} onAdvance={() => onResult(1)}>
+          <div className="anim-shake" style={{ marginTop: 32 }}>
+            <div style={{
+              background: 'rgba(255,55,95,0.08)',
+              border: '1px solid rgba(255,55,95,0.3)',
+              borderRadius: 'var(--radius)',
+              padding: '16px',
+            }}>
+              <div style={{ color: 'var(--red)', fontSize: '0.78rem', marginBottom: 4 }}>✗ Incorrect</div>
+              <div style={{ color: 'var(--text2)', fontSize: '0.82rem', marginBottom: 6 }}>
+                You: <span style={{ color: 'var(--text)' }}>{answer}</span>
+              </div>
+              <div style={{ color: 'var(--text2)', fontSize: '0.82rem' }}>
+                Answer: <span style={{ color: 'var(--text)' }}>{card.en}</span>
+              </div>
             </div>
           </div>
-          <div style={{ marginBottom: 8, fontSize: '0.78rem', color: 'var(--text3)' }}>How close were you?</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
-            {[
-              { q: 0, label: 'Blank', color: 'var(--red)' },
-              { q: 1, label: 'Way off', color: 'var(--red)' },
-              { q: 2, label: 'Close', color: 'var(--yellow)' },
-            ].map(({ q, label, color }) => (
-              <button
-                key={q}
-                className="btn"
-                onClick={() => onResult(q)}
-                style={{ border: `1px solid ${color}`, color, background: 'transparent', fontFamily: "'DM Mono', monospace" }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
+        </AutoAdvance>
       )}
     </div>
   );
@@ -161,7 +137,7 @@ function MCQQuiz({ card, allCards, onResult }) {
   function pick(en) {
     if (chosen !== null) return;
     setChosen(en);
-    setTimeout(() => onResult(en === card.en ? 4 : 1), 900);
+    setTimeout(() => onResult(en === card.en ? 4 : 1), 700);
   }
 
   return (
@@ -280,24 +256,26 @@ function ReverseQuiz({ card, onResult }) {
       )}
 
       {(phase === 'correct' || phase === 'wrong') && (
-        <div key={`result-${animKey}`} className={phase === 'correct' ? 'anim-pop' : 'anim-shake'} style={{ marginTop: 32 }}>
-          <div style={{
-            background: phase === 'correct' ? 'rgba(48,209,88,0.08)' : 'rgba(255,55,95,0.08)',
-            border: `1px solid ${phase === 'correct' ? 'rgba(48,209,88,0.3)' : 'rgba(255,55,95,0.3)'}`,
-            borderRadius: 'var(--radius)',
-            padding: '16px',
-            marginBottom: 16,
-          }}>
-            <div style={{ color: phase === 'correct' ? 'var(--green)' : 'var(--red)', fontSize: '0.78rem', marginBottom: 8 }}>
-              {phase === 'correct' ? '✓ Correct' : '✗ Incorrect'}
+        <AutoAdvance
+          key={`result-${animKey}`}
+          delay={phase === 'correct' ? 700 : 1400}
+          onAdvance={() => onResult(phase === 'correct' ? 4 : 1)}
+        >
+          <div className={phase === 'correct' ? 'anim-pop' : 'anim-shake'} style={{ marginTop: 32 }}>
+            <div style={{
+              background: phase === 'correct' ? 'rgba(48,209,88,0.08)' : 'rgba(255,55,95,0.08)',
+              border: `1px solid ${phase === 'correct' ? 'rgba(48,209,88,0.3)' : 'rgba(255,55,95,0.3)'}`,
+              borderRadius: 'var(--radius)',
+              padding: '16px',
+            }}>
+              <div style={{ color: phase === 'correct' ? 'var(--green)' : 'var(--red)', fontSize: '0.78rem', marginBottom: 8 }}>
+                {phase === 'correct' ? '✓ Correct' : '✗ Incorrect'}
+              </div>
+              <div style={{ fontSize: '1.6rem', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 700 }}>{card.kr}</div>
+              <div style={{ fontSize: '0.82rem', color: 'var(--text3)', marginTop: 4, fontStyle: 'italic' }}>{card.rom}</div>
             </div>
-            <div style={{ fontSize: '1.6rem', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 700 }}>{card.kr}</div>
-            <div style={{ fontSize: '0.82rem', color: 'var(--text3)', marginTop: 4, fontStyle: 'italic' }}>{card.rom}</div>
           </div>
-          <button className="btn btn-primary btn-full" onClick={() => onResult(phase === 'correct' ? 4 : 1)}>
-            Next →
-          </button>
-        </div>
+        </AutoAdvance>
       )}
     </div>
   );

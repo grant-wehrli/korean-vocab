@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import StudyView from '../components/StudyView';
 
 const word1 = { kr: '안녕', rom: 'annyeong', en: 'hello' };
@@ -21,16 +21,13 @@ function makeConfig(words, mode = 'recall', forceAll = false) {
 }
 
 describe('StudyView', () => {
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); });
+
   describe('RecallQuiz mode', () => {
     it('renders the Korean word and romanization', () => {
-      const store = makeStore();
       render(
-        <StudyView
-          config={makeConfig([word1], 'recall')}
-          store={store}
-          allSets={{}}
-          onDone={vi.fn()}
-        />
+        <StudyView config={makeConfig([word1], 'recall')} store={makeStore()} allSets={{}} onDone={vi.fn()} />
       );
       expect(screen.getByText('안녕')).toBeInTheDocument();
       expect(screen.getByText('annyeong')).toBeInTheDocument();
@@ -58,7 +55,6 @@ describe('StudyView', () => {
       fireEvent.change(screen.getByPlaceholderText(/english meaning/i), { target: { value: 'hello' } });
       fireEvent.click(screen.getByRole('button', { name: /check/i }));
       expect(screen.getByText(/correct/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /knew it/i })).toBeInTheDocument();
     });
 
     it('shows incorrect feedback for wrong answer', () => {
@@ -68,7 +64,6 @@ describe('StudyView', () => {
       fireEvent.change(screen.getByPlaceholderText(/english meaning/i), { target: { value: 'wrong' } });
       fireEvent.click(screen.getByRole('button', { name: /check/i }));
       expect(screen.getByText(/incorrect/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /blank/i })).toBeInTheDocument();
     });
 
     it('submits on Enter key press', () => {
@@ -81,30 +76,40 @@ describe('StudyView', () => {
       expect(screen.getByText(/correct/i)).toBeInTheDocument();
     });
 
-    it('confidence button calls store.reviewCard with correct quality', () => {
+    it('auto-advances and calls store.reviewCard(quality=4) after correct answer', async () => {
       const store = makeStore();
-      // Single card so shuffle is deterministic
       render(
         <StudyView config={makeConfig([word1], 'recall')} store={store} allSets={{}} onDone={vi.fn()} />
       );
       fireEvent.change(screen.getByPlaceholderText(/english meaning/i), { target: { value: 'hello' } });
       fireEvent.click(screen.getByRole('button', { name: /check/i }));
-      fireEvent.click(screen.getByRole('button', { name: /knew it/i }));
+      await act(async () => { vi.runAllTimers(); });
       expect(store.reviewCard).toHaveBeenCalledWith('안녕', 4);
     });
 
-    it('shows completion screen after last card', () => {
+    it('auto-advances and calls store.reviewCard(quality=1) after wrong answer', async () => {
+      const store = makeStore();
+      render(
+        <StudyView config={makeConfig([word1], 'recall')} store={store} allSets={{}} onDone={vi.fn()} />
+      );
+      fireEvent.change(screen.getByPlaceholderText(/english meaning/i), { target: { value: 'wrong' } });
+      fireEvent.click(screen.getByRole('button', { name: /check/i }));
+      await act(async () => { vi.runAllTimers(); });
+      expect(store.reviewCard).toHaveBeenCalledWith('안녕', 1);
+    });
+
+    it('shows completion screen after last card', async () => {
       const store = makeStore();
       render(
         <StudyView config={makeConfig([word1], 'recall')} store={store} allSets={{}} onDone={vi.fn()} />
       );
       fireEvent.change(screen.getByPlaceholderText(/english meaning/i), { target: { value: 'hello' } });
       fireEvent.click(screen.getByRole('button', { name: /check/i }));
-      fireEvent.click(screen.getByRole('button', { name: /knew it/i }));
+      await act(async () => { vi.runAllTimers(); });
       expect(screen.getByRole('button', { name: /done/i })).toBeInTheDocument();
     });
 
-    it('completion screen calls onDone', () => {
+    it('completion screen calls onDone', async () => {
       const onDone = vi.fn();
       const store = makeStore();
       render(
@@ -112,7 +117,7 @@ describe('StudyView', () => {
       );
       fireEvent.change(screen.getByPlaceholderText(/english meaning/i), { target: { value: 'hello' } });
       fireEvent.click(screen.getByRole('button', { name: /check/i }));
-      fireEvent.click(screen.getByRole('button', { name: /knew it/i }));
+      await act(async () => { vi.runAllTimers(); });
       fireEvent.click(screen.getByRole('button', { name: /done/i }));
       expect(onDone).toHaveBeenCalledOnce();
     });
@@ -122,7 +127,6 @@ describe('StudyView', () => {
     const manyWords = [word1, word2, word3, word4, word5];
 
     it('renders multiple choice buttons', () => {
-      // Empty store → all words unseen → all due → non-empty queue
       render(
         <StudyView config={makeConfig(manyWords, 'mcq')} store={makeStore()} allSets={{}} onDone={vi.fn()} />
       );
@@ -130,7 +134,6 @@ describe('StudyView', () => {
     });
 
     it('shows a Korean word prompt', () => {
-      // Empty store → all words unseen and due
       render(
         <StudyView config={makeConfig(manyWords, 'mcq')} store={makeStore()} allSets={{}} onDone={vi.fn()} />
       );
@@ -138,19 +141,15 @@ describe('StudyView', () => {
       expect(hasKorean).toBe(true);
     });
 
-    it('clicking a choice calls store.reviewCard after the 900ms delay', async () => {
-      vi.useFakeTimers();
+    it('clicking a choice calls store.reviewCard after the 700ms delay', async () => {
       const store = makeStore();
       render(
         <StudyView config={makeConfig(manyWords, 'mcq')} store={store} allSets={{}} onDone={vi.fn()} />
       );
-      // MCQ choice buttons are the non-navigation buttons (skip ✕ button)
       const choiceButtons = screen.getAllByRole('button').filter(b => !b.textContent.includes('✕'));
       fireEvent.click(choiceButtons[0]);
-      // Advance past the 900ms setTimeout in pick()
       await act(async () => { vi.runAllTimers(); });
       expect(store.reviewCard).toHaveBeenCalled();
-      vi.useRealTimers();
     });
   });
 
@@ -159,7 +158,6 @@ describe('StudyView', () => {
       render(
         <StudyView config={makeConfig([word1], 'reverse')} store={makeStore()} allSets={{}} onDone={vi.fn()} />
       );
-      // text-transform: uppercase is CSS-only; DOM text is lowercase
       expect(screen.getByText('hello')).toBeInTheDocument();
     });
 
@@ -174,9 +172,7 @@ describe('StudyView', () => {
       render(
         <StudyView config={makeConfig([word1], 'reverse')} store={makeStore()} allSets={{}} onDone={vi.fn()} />
       );
-      fireEvent.change(screen.getByPlaceholderText(/한국어 or romanization/i), {
-        target: { value: 'annyeong' },
-      });
+      fireEvent.change(screen.getByPlaceholderText(/한국어 or romanization/i), { target: { value: 'annyeong' } });
       fireEvent.click(screen.getByRole('button', { name: /check/i }));
       expect(screen.getByText(/correct/i)).toBeInTheDocument();
     });
@@ -185,9 +181,7 @@ describe('StudyView', () => {
       render(
         <StudyView config={makeConfig([word1], 'reverse')} store={makeStore()} allSets={{}} onDone={vi.fn()} />
       );
-      fireEvent.change(screen.getByPlaceholderText(/한국어 or romanization/i), {
-        target: { value: '안녕' },
-      });
+      fireEvent.change(screen.getByPlaceholderText(/한국어 or romanization/i), { target: { value: '안녕' } });
       fireEvent.click(screen.getByRole('button', { name: /check/i }));
       expect(screen.getByText(/correct/i)).toBeInTheDocument();
     });
@@ -196,11 +190,20 @@ describe('StudyView', () => {
       render(
         <StudyView config={makeConfig([word1], 'reverse')} store={makeStore()} allSets={{}} onDone={vi.fn()} />
       );
-      fireEvent.change(screen.getByPlaceholderText(/한국어 or romanization/i), {
-        target: { value: 'wrong' },
-      });
+      fireEvent.change(screen.getByPlaceholderText(/한국어 or romanization/i), { target: { value: 'wrong' } });
       fireEvent.click(screen.getByRole('button', { name: /check/i }));
       expect(screen.getByText(/incorrect/i)).toBeInTheDocument();
+    });
+
+    it('auto-advances after correct reverse answer', async () => {
+      const store = makeStore();
+      render(
+        <StudyView config={makeConfig([word1], 'reverse')} store={store} allSets={{}} onDone={vi.fn()} />
+      );
+      fireEvent.change(screen.getByPlaceholderText(/한국어 or romanization/i), { target: { value: 'annyeong' } });
+      fireEvent.click(screen.getByRole('button', { name: /check/i }));
+      await act(async () => { vi.runAllTimers(); });
+      expect(store.reviewCard).toHaveBeenCalledWith('안녕', 4);
     });
   });
 
