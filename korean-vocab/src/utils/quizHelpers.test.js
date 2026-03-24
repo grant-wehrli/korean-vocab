@@ -54,7 +54,8 @@ describe('flexMatch', () => {
   });
 
   it('insufficient overlap returns false', () => {
-    // "to go somewhere far" → 4 words, need ≥2. "to" only overlaps 1 → false
+    // "to go somewhere far" → meaningful words: {go, somewhere, far}, threshold=1
+    // "to" is a stop word → meaningful overlap = 0 → false
     expect(flexMatch('to', 'to go somewhere far')).toBe(false);
   });
 
@@ -74,6 +75,35 @@ describe('flexMatch', () => {
 
   it('multi-word answer with sufficient overlap', () => {
     expect(flexMatch('hello formal', 'hello formal greeting')).toBe(true);
+  });
+
+  // Stop-word / real vocab cases
+  it('"nice" matches "nice to meet you" (stop words excluded from threshold)', () => {
+    expect(flexMatch('nice', 'nice to meet you')).toBe(true);
+  });
+
+  it('"meet" matches "nice to meet you"', () => {
+    expect(flexMatch('meet', 'nice to meet you')).toBe(true);
+  });
+
+  it('"okay" matches "it\'s okay" (apostrophe stripped, stop word filtered)', () => {
+    expect(flexMatch('okay', "it's okay")).toBe(true);
+  });
+
+  it('"how are you" matches "how are you? (formal)" (question mark stripped)', () => {
+    expect(flexMatch('how are you', 'how are you? (formal)')).toBe(true);
+  });
+
+  it('"sorry" matches "I\'m sorry (formal)"', () => {
+    expect(flexMatch('sorry', "I'm sorry (formal)")).toBe(true);
+  });
+
+  it('"eat" matches "to eat" (regression — stop word "to" excluded)', () => {
+    expect(flexMatch('eat', 'to eat')).toBe(true);
+  });
+
+  it('nonsense answer still fails', () => {
+    expect(flexMatch('banana', 'nice to meet you')).toBe(false);
   });
 });
 
