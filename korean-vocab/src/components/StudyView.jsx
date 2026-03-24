@@ -74,8 +74,8 @@ function RecallQuiz({ card, onResult }) {
       {phase === 'correct' && (
         <div key={`correct-${animKey}`} className="anim-pop" style={{ marginTop: 32 }}>
           <div style={{
-            background: 'rgba(61,220,151,0.08)',
-            border: '1px solid rgba(61,220,151,0.3)',
+            background: 'rgba(48,209,88,0.08)',
+            border: '1px solid rgba(48,209,88,0.3)',
             borderRadius: 'var(--radius)',
             padding: '16px',
             marginBottom: 16,
@@ -106,8 +106,8 @@ function RecallQuiz({ card, onResult }) {
       {phase === 'wrong' && (
         <div key={`wrong-${animKey}`} className="anim-shake" style={{ marginTop: 32 }}>
           <div style={{
-            background: 'rgba(255,77,106,0.08)',
-            border: '1px solid rgba(255,77,106,0.3)',
+            background: 'rgba(255,55,95,0.08)',
+            border: '1px solid rgba(255,55,95,0.3)',
             borderRadius: 'var(--radius)',
             padding: '16px',
             marginBottom: 16,
@@ -185,8 +185,8 @@ function MCQQuiz({ card, allCards, onResult }) {
           let textColor = 'var(--text)';
 
           if (chosen !== null) {
-            if (isCorrect) { bg = 'rgba(61,220,151,0.1)'; borderColor = 'var(--green)'; textColor = 'var(--green)'; }
-            else if (isChosen) { bg = 'rgba(255,77,106,0.1)'; borderColor = 'var(--red)'; textColor = 'var(--red)'; }
+            if (isCorrect) { bg = 'rgba(48,209,88,0.1)'; borderColor = 'var(--green)'; textColor = 'var(--green)'; }
+            else if (isChosen) { bg = 'rgba(255,55,95,0.1)'; borderColor = 'var(--red)'; textColor = 'var(--red)'; }
           }
 
           return (
@@ -282,8 +282,8 @@ function ReverseQuiz({ card, onResult }) {
       {(phase === 'correct' || phase === 'wrong') && (
         <div key={`result-${animKey}`} className={phase === 'correct' ? 'anim-pop' : 'anim-shake'} style={{ marginTop: 32 }}>
           <div style={{
-            background: phase === 'correct' ? 'rgba(61,220,151,0.08)' : 'rgba(255,77,106,0.08)',
-            border: `1px solid ${phase === 'correct' ? 'rgba(61,220,151,0.3)' : 'rgba(255,77,106,0.3)'}`,
+            background: phase === 'correct' ? 'rgba(48,209,88,0.08)' : 'rgba(255,55,95,0.08)',
+            border: `1px solid ${phase === 'correct' ? 'rgba(48,209,88,0.3)' : 'rgba(255,55,95,0.3)'}`,
             borderRadius: 'var(--radius)',
             padding: '16px',
             marginBottom: 16,

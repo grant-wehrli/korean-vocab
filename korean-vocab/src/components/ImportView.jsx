@@ -73,7 +73,7 @@ export default function ImportView({ store, onBack }) {
             padding: '40px 24px',
             textAlign: 'center',
             cursor: 'pointer',
-            background: dragging ? 'rgba(124,106,255,0.05)' : 'transparent',
+            background: dragging ? 'rgba(0,199,190,0.05)' : 'transparent',
             transition: 'all 0.2s',
             marginBottom: 16,
           }}
