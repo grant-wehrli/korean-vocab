@@ -18,6 +18,19 @@ export function buildQueue(words, store, forceAll) {
   return shuffle(due);
 }
 
+const DIGIT_TO_WORD = {
+  '0': 'zero', '1': 'one', '2': 'two', '3': 'three', '4': 'four',
+  '5': 'five', '6': 'six', '7': 'seven', '8': 'eight', '9': 'nine',
+  '10': 'ten', '11': 'eleven', '12': 'twelve', '13': 'thirteen',
+  '14': 'fourteen', '15': 'fifteen', '16': 'sixteen', '17': 'seventeen',
+  '18': 'eighteen', '19': 'nineteen', '20': 'twenty',
+  '100': 'hundred', '1000': 'thousand',
+};
+
+function normalizeNumerals(str) {
+  return str.replace(/\b\d+\b/g, n => DIGIT_TO_WORD[n] ?? n);
+}
+
 const STOP_WORDS = new Set([
   'a', 'an', 'the', 'to', 'i', 'it', 'its', 'is', 'are', 'was', 'be',
   'you', 'of', 'in', 'on', 'at',
@@ -32,7 +45,7 @@ function tokenize(str) {
 }
 
 export function flexMatch(answer, correct) {
-  const a = answer.toLowerCase().trim();
+  const a = normalizeNumerals(answer.toLowerCase().trim());
   const c = correct.toLowerCase();
   if (a === c) return true;
 
