@@ -1,3 +1,4 @@
 korean-vocab/node_modules/
 korean-vocab/dist/
 korean-vocab/coverage/
+korean-vocab/.env.local

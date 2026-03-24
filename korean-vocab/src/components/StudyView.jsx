@@ -30,6 +30,11 @@ function RecallQuiz({ card, onResult }) {
     setAnimKey(k => k + 1);
   }
 
+  function peek() {
+    setPhase('wrong');
+    setAnimKey(k => k + 1);
+  }
+
   function handleKey(e) {
     if (e.key === 'Enter' && phase === 'input') submit();
   }
@@ -73,9 +78,12 @@ function RecallQuiz({ card, onResult }) {
             onFocus={e => e.target.style.borderColor = 'var(--accent)'}
             onBlur={e => e.target.style.borderColor = 'var(--border)'}
           />
-          <button className="btn btn-primary btn-full" onClick={submit} disabled={!answer.trim()}>
-            Check
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-primary btn-full" style={{ flex: 1 }} onClick={submit} disabled={!answer.trim()}>
+              Check
+            </button>
+            <button className="btn btn-ghost" onClick={peek}>Peek</button>
+          </div>
         </div>
       )}
 
@@ -105,9 +113,11 @@ function RecallQuiz({ card, onResult }) {
               padding: '16px',
             }}>
               <div style={{ color: 'var(--red)', fontSize: '0.78rem', marginBottom: 4 }}>✗ Incorrect</div>
-              <div style={{ color: 'var(--text2)', fontSize: '0.82rem', marginBottom: 6 }}>
-                You: <span style={{ color: 'var(--text)' }}>{answer}</span>
-              </div>
+              {answer && (
+                <div style={{ color: 'var(--text2)', fontSize: '0.82rem', marginBottom: 6 }}>
+                  You: <span style={{ color: 'var(--text)' }}>{answer}</span>
+                </div>
+              )}
               <div style={{ color: 'var(--text2)', fontSize: '0.82rem' }}>
                 Answer: <span style={{ color: 'var(--text)' }}>{card.en}</span>
               </div>
@@ -214,6 +224,11 @@ function ReverseQuiz({ card, onResult }) {
     setAnimKey(k => k + 1);
   }
 
+  function peek() {
+    setPhase('wrong');
+    setAnimKey(k => k + 1);
+  }
+
   return (
     <div>
       <div key={`en-${animKey}`} className="anim-pop" style={{ textAlign: 'center', marginBottom: 8 }}>
@@ -251,7 +266,10 @@ function ReverseQuiz({ card, onResult }) {
             onFocus={e => e.target.style.borderColor = 'var(--accent)'}
             onBlur={e => e.target.style.borderColor = 'var(--border)'}
           />
-          <button className="btn btn-primary btn-full" onClick={submit} disabled={!answer.trim()}>Check</button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-primary btn-full" style={{ flex: 1 }} onClick={submit} disabled={!answer.trim()}>Check</button>
+            <button className="btn btn-ghost" onClick={peek}>Peek</button>
+          </div>
         </div>
       )}
 
