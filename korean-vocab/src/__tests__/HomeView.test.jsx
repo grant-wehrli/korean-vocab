@@ -7,8 +7,8 @@ const word1 = { kr: '안녕', rom: 'annyeong', en: 'hello' };
 const word2 = { kr: '감사', rom: 'gamsa', en: 'thanks' };
 
 const allSets = {
-  Greetings: [word1],
-  Numbers: [word2],
+  Transportation: [word1],
+  'Work & Office': [word2],
 };
 
 function makeStore(overrides = {}) {
@@ -39,8 +39,8 @@ describe('HomeView', () => {
   it('shows all sets pre-selected by default', () => {
     render(<HomeView {...defaultProps} />);
     // Both sets appear as toggle buttons
-    expect(screen.getByText('Greetings')).toBeInTheDocument();
-    expect(screen.getByText('Numbers')).toBeInTheDocument();
+    expect(screen.getByText('Transportation')).toBeInTheDocument();
+    expect(screen.getByText('Work & Office')).toBeInTheDocument();
     // Start is enabled because both selected and cards are due
     expect(screen.getByRole('button', { name: /start/i })).not.toBeDisabled();
   });
@@ -55,15 +55,15 @@ describe('HomeView', () => {
   it('toggling a set off disables Start if no sets remain selected', () => {
     render(<HomeView {...defaultProps} />);
     // Deselect both sets
-    fireEvent.click(screen.getByText('Greetings'));
-    fireEvent.click(screen.getByText('Numbers'));
+    fireEvent.click(screen.getByText('Transportation'));
+    fireEvent.click(screen.getByText('Work & Office'));
     expect(screen.getByRole('button', { name: /select a set/i })).toBeDisabled();
   });
 
   it('toggling a set off then on re-enables it', () => {
     render(<HomeView {...defaultProps} />);
-    fireEvent.click(screen.getByText('Greetings')); // deselect
-    fireEvent.click(screen.getByText('Greetings')); // reselect
+    fireEvent.click(screen.getByText('Transportation')); // deselect
+    fireEvent.click(screen.getByText('Transportation')); // reselect
     // Start should still show cards
     expect(screen.getByRole('button', { name: /start/i })).not.toBeDisabled();
   });
@@ -106,11 +106,10 @@ describe('HomeView', () => {
     expect(words).toContainEqual(word2);
   });
 
-  it('forceAll toggle switches to all-cards mode', () => {
+  it('"Study again" button starts with forceAll=true', () => {
     const onStart = vi.fn();
     render(<HomeView {...defaultProps} onStart={onStart} />);
-    fireEvent.click(screen.getByText('Study all cards'));
-    fireEvent.click(screen.getByRole('button', { name: /start/i }));
+    fireEvent.click(screen.getByRole('button', { name: /study again/i }));
     expect(onStart).toHaveBeenCalledWith(expect.objectContaining({ forceAll: true }));
   });
 
@@ -134,7 +133,7 @@ describe('HomeView', () => {
       getDueCards: (words) => words,
     });
     render(<HomeView {...defaultProps} store={store} />);
-    expect(screen.getByText('3 due')).toBeInTheDocument();
+    expect(screen.getByText('3 studied')).toBeInTheDocument();
   });
 
   it('shows "custom" tag for custom sets', () => {

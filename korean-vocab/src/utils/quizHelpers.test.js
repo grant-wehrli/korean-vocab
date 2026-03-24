@@ -105,6 +105,31 @@ describe('flexMatch', () => {
   it('nonsense answer still fails', () => {
     expect(flexMatch('banana', 'nice to meet you')).toBe(false);
   });
+
+  // Digit normalization
+  it('"5" matches "five (native)"', () => {
+    expect(flexMatch('5', 'five (native)')).toBe(true);
+  });
+
+  it('"1" matches "one (native)"', () => {
+    expect(flexMatch('1', 'one (native)')).toBe(true);
+  });
+
+  it('"10" matches "ten"', () => {
+    expect(flexMatch('10', 'ten')).toBe(true);
+  });
+
+  it('"100" matches "hundred"', () => {
+    expect(flexMatch('100', 'hundred')).toBe(true);
+  });
+
+  it('"20" matches "twenty"', () => {
+    expect(flexMatch('20', 'twenty')).toBe(true);
+  });
+
+  it('unknown digit falls through to no-match', () => {
+    expect(flexMatch('99', 'hello')).toBe(false);
+  });
 });
 
 describe('buildQueue', () => {
