@@ -109,6 +109,31 @@ describe('StudyView', () => {
       expect(screen.getByRole('button', { name: /done/i })).toBeInTheDocument();
     });
 
+    it('Peek button is visible during input phase', () => {
+      render(
+        <StudyView config={makeConfig([word1], 'recall')} store={makeStore()} allSets={{}} onDone={vi.fn()} />
+      );
+      expect(screen.getByRole('button', { name: /peek/i })).toBeInTheDocument();
+    });
+
+    it('clicking Peek reveals the answer', () => {
+      render(
+        <StudyView config={makeConfig([word1], 'recall')} store={makeStore()} allSets={{}} onDone={vi.fn()} />
+      );
+      fireEvent.click(screen.getByRole('button', { name: /peek/i }));
+      expect(screen.getByText(/answer:/i)).toBeInTheDocument();
+    });
+
+    it('clicking Peek calls store.reviewCard with quality=1 after timer', async () => {
+      const store = makeStore();
+      render(
+        <StudyView config={makeConfig([word1], 'recall')} store={store} allSets={{}} onDone={vi.fn()} />
+      );
+      fireEvent.click(screen.getByRole('button', { name: /peek/i }));
+      await act(async () => { vi.runAllTimers(); });
+      expect(store.reviewCard).toHaveBeenCalledWith('안녕', 1);
+    });
+
     it('completion screen calls onDone', async () => {
       const onDone = vi.fn();
       const store = makeStore();
@@ -193,6 +218,21 @@ describe('StudyView', () => {
       fireEvent.change(screen.getByPlaceholderText(/한국어 or romanization/i), { target: { value: 'wrong' } });
       fireEvent.click(screen.getByRole('button', { name: /check/i }));
       expect(screen.getByText(/incorrect/i)).toBeInTheDocument();
+    });
+
+    it('Peek button is visible during input phase', () => {
+      render(
+        <StudyView config={makeConfig([word1], 'reverse')} store={makeStore()} allSets={{}} onDone={vi.fn()} />
+      );
+      expect(screen.getByRole('button', { name: /peek/i })).toBeInTheDocument();
+    });
+
+    it('clicking Peek reveals the Korean answer', () => {
+      render(
+        <StudyView config={makeConfig([word1], 'reverse')} store={makeStore()} allSets={{}} onDone={vi.fn()} />
+      );
+      fireEvent.click(screen.getByRole('button', { name: /peek/i }));
+      expect(screen.getByText('안녕')).toBeInTheDocument();
     });
 
     it('auto-advances after correct reverse answer', async () => {
