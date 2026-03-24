@@ -5,6 +5,8 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: '/korean-vocab/',   // must match your repo name exactly
+  server: { host: true },
+  preview: { host: true },
   test: {
     globals: true,
     environment: 'jsdom',
