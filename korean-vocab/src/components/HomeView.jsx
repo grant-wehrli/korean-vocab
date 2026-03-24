@@ -11,7 +11,6 @@ const MODES = [
 export default function HomeView({ store, allSets, auth, onSignIn, onStart, onStats, onImport }) {
   const [selected, setSelected] = useState(() => new Set(Object.keys(allSets)));
   const [mode, setMode] = useState('recall');
-  const [forceAll, setForceAll] = useState(false);
 
   const stats = useMemo(() => store.getStats(), [store]);
 
@@ -21,8 +20,8 @@ export default function HomeView({ store, allSets, auth, onSignIn, onStart, onSt
   );
 
   const dueCount = useMemo(
-    () => forceAll ? selectedWords.length : store.getDueCards(selectedWords).length,
-    [selectedWords, store, forceAll],
+    () => store.getDueCards(selectedWords).length,
+    [selectedWords, store],
   );
 
   function toggle(name) {
@@ -35,14 +34,18 @@ export default function HomeView({ store, allSets, auth, onSignIn, onStart, onSt
 
   function handleStart() {
     if (selectedWords.length === 0 || dueCount === 0) return;
-    onStart({ words: selectedWords, mode, forceAll });
+    onStart({ words: selectedWords, mode, forceAll: false });
+  }
+
+  function handleStudyAgain() {
+    onStart({ words: selectedWords, mode, forceAll: true });
   }
 
   const startLabel = selected.size === 0
     ? 'Select a set'
     : dueCount === 0
     ? 'No cards due'
-    : `▶  Start — ${dueCount} card${dueCount !== 1 ? 's' : ''}${forceAll ? ' (all)' : ''}`;
+    : `▶  Start — ${dueCount} card${dueCount !== 1 ? 's' : ''}`;
 
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
@@ -76,7 +79,7 @@ export default function HomeView({ store, allSets, auth, onSignIn, onStart, onSt
       <div className="anim-fade-up container" style={{ animationDelay: '60ms', paddingBottom: 0 }}>
         <div style={{ fontSize: '0.8rem', color: 'var(--text3)', textAlign: 'center', marginBottom: 20 }}>
           <span style={{ color: stats.due > 0 ? 'var(--yellow)' : 'var(--green)', fontWeight: 600 }}>
-            {stats.due} due
+            {stats.due} studied
           </span>
           {stats.total > 0 && (
             <>
@@ -126,7 +129,7 @@ export default function HomeView({ store, allSets, auth, onSignIn, onStart, onSt
                   <div>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text)' }}>{name}</div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--text3)', marginTop: 1 }}>
-                      {words.length}w · {due} due
+                      {words.length}w · {due} studied
                     </div>
                   </div>
                 </div>
@@ -160,36 +163,26 @@ export default function HomeView({ store, allSets, auth, onSignIn, onStart, onSt
           ))}
         </div>
 
-        {/* Study all toggle */}
-        <button
-          onClick={() => setForceAll(p => !p)}
-          style={{
-            width: '100%',
-            padding: '10px 14px',
-            background: forceAll ? 'rgba(255,214,10,0.06)' : 'var(--surface)',
-            border: `1px solid ${forceAll ? 'var(--yellow)' : 'var(--border)'}`,
-            borderRadius: 'var(--radius-sm)',
-            cursor: 'pointer',
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            marginBottom: 16,
-            transition: 'all 0.12s',
-          }}
-        >
-          <span style={{ fontSize: '0.8rem', color: 'var(--text2)' }}>Study all cards</span>
-          <span style={{ fontSize: '0.75rem', color: forceAll ? 'var(--yellow)' : 'var(--text3)' }}>
-            {forceAll ? 'on' : 'due only'}
-          </span>
-        </button>
-
         {/* Start */}
         <button
           className="btn btn-primary btn-full btn-lg"
           onClick={handleStart}
           disabled={selected.size === 0 || dueCount === 0}
-          style={{ marginBottom: 14, opacity: (selected.size === 0 || dueCount === 0) ? 0.4 : 1 }}
+          style={{ marginBottom: 10, opacity: (selected.size === 0 || dueCount === 0) ? 0.4 : 1 }}
         >
           {startLabel}
         </button>
+
+        {/* Study again */}
+        {selectedWords.length > 0 && (
+          <button
+            className="btn btn-ghost btn-full"
+            onClick={handleStudyAgain}
+            style={{ marginBottom: 14 }}
+          >
+            ↺ Study again
+          </button>
+        )}
 
         {/* Secondary links */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 32 }}>
