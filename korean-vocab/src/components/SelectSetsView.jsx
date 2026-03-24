@@ -57,7 +57,7 @@ export default function SelectSetsView({ allSets, store, onStart, onBack }) {
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   padding: '14px 16px',
-                  background: isSelected ? 'rgba(124,106,255,0.12)' : 'var(--surface)',
+                  background: isSelected ? 'rgba(0,199,190,0.12)' : 'var(--surface)',
                   border: `1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`,
                   borderRadius: 'var(--radius)',
                   cursor: 'pointer',
@@ -100,7 +100,7 @@ export default function SelectSetsView({ allSets, store, onStart, onBack }) {
                 onClick={() => setMode(m.id)}
                 style={{
                   padding: '12px 16px',
-                  background: mode === m.id ? 'rgba(124,106,255,0.12)' : 'var(--surface)',
+                  background: mode === m.id ? 'rgba(0,199,190,0.12)' : 'var(--surface)',
                   border: `1px solid ${mode === m.id ? 'var(--accent)' : 'var(--border)'}`,
                   borderRadius: 'var(--radius-sm)',
                   cursor: 'pointer',
