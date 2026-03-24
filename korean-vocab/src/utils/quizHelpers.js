@@ -18,12 +18,33 @@ export function buildQueue(words, store, forceAll) {
   return shuffle(due);
 }
 
+const STOP_WORDS = new Set([
+  'a', 'an', 'the', 'to', 'i', 'it', 'its', 'is', 'are', 'was', 'be',
+  'you', 'of', 'in', 'on', 'at',
+]);
+
+function tokenize(str) {
+  return str
+    .toLowerCase()
+    .replace(/[()\/\-?!.,'"]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
 export function flexMatch(answer, correct) {
   const a = answer.toLowerCase().trim();
   const c = correct.toLowerCase();
   if (a === c) return true;
-  const cWords = new Set(c.replace(/[()\/]/g, ' ').split(/\s+/).filter(Boolean));
-  const aWords = new Set(a.split(/\s+/).filter(Boolean));
-  const overlap = [...cWords].filter(w => aWords.has(w)).length;
-  return overlap >= Math.max(1, Math.floor(cWords.size / 2));
+
+  const cTokens = tokenize(c);
+  const aTokens = new Set(tokenize(a));
+
+  // Use only meaningful (non-stop) words for both threshold and overlap,
+  // so "eat" passes for "to eat" and stop-word-only answers always fail.
+  const cMeaningful = cTokens.filter(w => !STOP_WORDS.has(w));
+  const basis = cMeaningful.length > 0 ? cMeaningful : cTokens;
+  const threshold = Math.max(1, Math.floor(basis.length / 2));
+
+  const overlap = basis.filter(w => aTokens.has(w)).length;
+  return overlap >= threshold;
 }
