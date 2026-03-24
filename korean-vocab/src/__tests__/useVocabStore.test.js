@@ -1,5 +1,17 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+
+// Mock supabase so createClient doesn't throw; sync calls are no-ops (userId is null in all tests)
+vi.mock('../lib/supabase', () => ({
+  supabase: {
+    from: vi.fn(() => ({
+      upsert: vi.fn().mockReturnValue({ then: vi.fn() }),
+      delete: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+    })),
+  },
+}));
+
 import { useVocabStore } from '../hooks/useVocabStore';
 
 const word1 = { kr: '안녕하세요', rom: 'annyeonghaseyo', en: 'hello (formal)' };

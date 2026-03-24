@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { BUILTIN_VOCAB } from '../data/vocab';
+import AccountButton from './AccountButton';
 
-export default function HomeView({ store, allSets, onStudy, onStats, onImport }) {
+export default function HomeView({ store, allSets, auth, onSignIn, onStudy, onStats, onImport }) {
   const stats = useMemo(() => store.getStats(), [store]);
   const totalWords = useMemo(() =>
     Object.values(allSets).reduce((s, w) => s + w.length, 0), [allSets]);
@@ -9,7 +10,12 @@ export default function HomeView({ store, allSets, onStudy, onStats, onImport })
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <div style={{ padding: '48px 24px 24px', textAlign: 'center' }}>
+      <div style={{ padding: '48px 24px 24px', textAlign: 'center', position: 'relative' }}>
+        {auth && (
+          <div style={{ position: 'absolute', top: 16, right: 16 }}>
+            <AccountButton auth={auth} onSignIn={onSignIn} />
+          </div>
+        )}
         <div className="anim-fade-up" style={{ animationDelay: '0ms' }}>
           <div style={{
             fontSize: '2.6rem',
