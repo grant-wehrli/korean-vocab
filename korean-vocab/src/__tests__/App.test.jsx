@@ -57,13 +57,7 @@ describe('App', () => {
 
   it('renders HomeView after choosing guest mode', () => {
     renderApp();
-    expect(screen.getByText('한국어')).toBeInTheDocument();
-  });
-
-  it('navigates to SelectSetsView when Study button is clicked', () => {
-    renderApp();
-    fireEvent.click(screen.getByRole('button', { name: /study/i }));
-    expect(screen.getByText('Select Sets')).toBeInTheDocument();
+    expect(screen.getByText('단어')).toBeInTheDocument();
   });
 
   it('navigates to StatsView when Stats button is clicked', () => {
@@ -82,35 +76,24 @@ describe('App', () => {
     renderApp();
     fireEvent.click(screen.getByRole('button', { name: /stats/i }));
     fireEvent.click(screen.getByRole('button', { name: /back/i }));
-    expect(screen.getByText('한국어')).toBeInTheDocument();
+    expect(screen.getByText('단어')).toBeInTheDocument();
   });
 
   it('navigates back to HomeView from ImportView', () => {
     renderApp();
     fireEvent.click(screen.getByRole('button', { name: /import/i }));
     fireEvent.click(screen.getByRole('button', { name: /back/i }));
-    expect(screen.getByText('한국어')).toBeInTheDocument();
-  });
-
-  it('navigates back to HomeView from SelectSetsView', () => {
-    renderApp();
-    fireEvent.click(screen.getByRole('button', { name: /study/i }));
-    fireEvent.click(screen.getByRole('button', { name: /back/i }));
-    expect(screen.getByText('한국어')).toBeInTheDocument();
+    expect(screen.getByText('단어')).toBeInTheDocument();
   });
 
   it('startSession transitions to StudyView; endSession returns to HomeView', () => {
     renderApp();
-    // Navigate to SelectSets
-    fireEvent.click(screen.getByRole('button', { name: /study/i }));
-    // Select the first builtin set (Greetings)
-    fireEvent.click(screen.getByText('Greetings'));
-    // Start the session — calls startSession
+    // All sets pre-selected by default — Start button is enabled
     fireEvent.click(screen.getByRole('button', { name: /start/i }));
     // StudyView should be visible (shows counter like "1/N")
     expect(screen.getByText(/\d+\/\d+/)).toBeInTheDocument();
     // Exit the study session — calls endSession
     fireEvent.click(screen.getByRole('button', { name: /✕/i }));
-    expect(screen.getByText('한국어')).toBeInTheDocument();
+    expect(screen.getByText('단어')).toBeInTheDocument();
   });
 });

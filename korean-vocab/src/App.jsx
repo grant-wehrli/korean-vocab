@@ -3,7 +3,6 @@ import { useVocabStore, loadFromSupabase, migrateGuestData } from './hooks/useVo
 import { useAuth } from './hooks/useAuth';
 import { BUILTIN_VOCAB } from './data/vocab';
 import HomeView from './components/HomeView';
-import SelectSetsView from './components/SelectSetsView';
 import StudyView from './components/StudyView';
 import StatsView from './components/StatsView';
 import ImportView from './components/ImportView';
@@ -112,17 +111,9 @@ export default function App() {
           allSets={allSets}
           auth={auth}
           onSignIn={() => setGuestMode(false)}
-          onStudy={() => setView('select')}
+          onStart={startSession}
           onStats={() => setView('stats')}
           onImport={() => setView('import')}
-        />
-      )}
-      {view === 'select' && (
-        <SelectSetsView
-          allSets={allSets}
-          store={store}
-          onStart={startSession}
-          onBack={() => setView('home')}
         />
       )}
       {view === 'study' && sessionConfig && (
