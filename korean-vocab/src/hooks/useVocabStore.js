@@ -11,9 +11,15 @@ function storageKey(userId) {
 function loadState(userId) {
   try {
     const raw = localStorage.getItem(storageKey(userId));
-    return raw ? JSON.parse(raw) : { cards: {}, customSets: {} };
+    const parsed = raw ? JSON.parse(raw) : {};
+    return {
+      cards: parsed.cards ?? {},
+      customSets: parsed.customSets ?? {},
+      streak: parsed.streak ?? 0,
+      last_studied: parsed.last_studied ?? null,
+    };
   } catch {
-    return { cards: {}, customSets: {} };
+    return { cards: {}, customSets: {}, streak: 0, last_studied: null };
   }
 }
 
@@ -75,8 +81,10 @@ export async function loadFromSupabase(userId) {
   (setsRes.data ?? []).forEach(row => { customSets[row.name] = row.words; });
 
   const defaultMode = prefsRes.data?.default_mode ?? 'recall';
+  const streak = prefsRes.data?.streak ?? 0;
+  const last_studied = prefsRes.data?.last_studied ?? null;
 
-  const state = { cards, customSets };
+  const state = { cards, customSets, streak, last_studied };
   saveState(state, userId);
   return { ...state, defaultMode };
 }
@@ -209,6 +217,24 @@ export function useVocabStore(userId) {
     };
   }, [state.cards]);
 
+  const updateStreak = useCallback(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    setState(prev => {
+      if (prev.last_studied === today) return prev;
+      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      const newStreak = prev.last_studied === yesterday ? (prev.streak ?? 0) + 1 : 1;
+      const next = { ...prev, streak: newStreak, last_studied: today };
+      saveState(next, userId);
+      if (userId) {
+        supabase.from('user_preferences').upsert({
+          user_id: userId, streak: newStreak, last_studied: today,
+          updated_at: new Date().toISOString(),
+        }).then(({ error }) => { if (error) console.error('updateStreak', error); });
+      }
+      return next;
+    });
+  }, [userId]);
+
   // Replace in-memory state entirely (used after Supabase load)
   const replaceState = useCallback((newState) => {
     setState(newState);
@@ -218,6 +244,7 @@ export function useVocabStore(userId) {
   return {
     cards: state.cards,
     customSets: state.customSets,
+    streak: state.streak ?? 0,
     getCard,
     initCards,
     reviewCard,
@@ -227,5 +254,6 @@ export function useVocabStore(userId) {
     getDueCards,
     getStats,
     replaceState,
+    updateStreak,
   };
 }

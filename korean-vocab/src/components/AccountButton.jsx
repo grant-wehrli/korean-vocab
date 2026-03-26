@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 
-export default function AccountButton({ auth, onSignIn }) {
+export default function AccountButton({ auth, onSignIn, onSettings }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -60,6 +60,13 @@ export default function AccountButton({ auth, onSignIn }) {
           <div style={{ fontSize: '0.78rem', color: 'var(--text2)', marginBottom: 12, wordBreak: 'break-all' }}>
             {auth.user.email}
           </div>
+          <button
+            className="btn btn-ghost btn-full"
+            style={{ fontSize: '0.82rem', marginBottom: 6 }}
+            onClick={() => { setOpen(false); onSettings?.(); }}
+          >
+            Settings
+          </button>
           <button
             className="btn btn-ghost btn-full"
             style={{ fontSize: '0.82rem' }}

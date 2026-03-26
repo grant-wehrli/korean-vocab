@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { shuffle, buildQueue, flexMatch } from '../utils/quizHelpers';
+import { useSpeech } from '../hooks/useSpeech';
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -11,7 +12,7 @@ function AutoAdvance({ delay, onAdvance, children }) {
   return children;
 }
 
-function RecallQuiz({ card, onResult }) {
+function RecallQuiz({ card, onResult, speak }) {
   const [answer, setAnswer] = useState('');
   const [phase, setPhase] = useState('input'); // input | correct | wrong
   const [animKey, setAnimKey] = useState(0);
@@ -52,6 +53,11 @@ function RecallQuiz({ card, onResult }) {
         <div style={{ fontSize: '0.82rem', color: 'var(--text3)', marginTop: 8, fontStyle: 'italic' }}>
           {card.rom}
         </div>
+        <button
+          onClick={() => speak(card.kr)}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: '1rem', marginTop: 6, padding: '2px 8px' }}
+          title="Pronounce"
+        >♪</button>
       </div>
 
       {phase === 'input' && (
@@ -129,7 +135,7 @@ function RecallQuiz({ card, onResult }) {
   );
 }
 
-function MCQQuiz({ card, allCards, onResult }) {
+function MCQQuiz({ card, allCards, onResult, speak }) {
   const [chosen, setChosen] = useState(null);
   const [animKey, setAnimKey] = useState(0);
 
@@ -160,6 +166,11 @@ function MCQQuiz({ card, allCards, onResult }) {
           color: 'var(--text)',
         }}>{card.kr}</div>
         <div style={{ fontSize: '0.82rem', color: 'var(--text3)', marginTop: 8, fontStyle: 'italic' }}>{card.rom}</div>
+        <button
+          onClick={() => speak(card.kr)}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: '1rem', marginTop: 6, padding: '2px 8px' }}
+          title="Pronounce"
+        >♪</button>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 32 }}>
@@ -204,7 +215,7 @@ function MCQQuiz({ card, allCards, onResult }) {
   );
 }
 
-function ReverseQuiz({ card, onResult }) {
+function ReverseQuiz({ card, onResult, speak }) {
   const [answer, setAnswer] = useState('');
   const [phase, setPhase] = useState('input');
   const [animKey, setAnimKey] = useState(0);
@@ -289,7 +300,14 @@ function ReverseQuiz({ card, onResult }) {
               <div style={{ color: phase === 'correct' ? 'var(--green)' : 'var(--red)', fontSize: '0.78rem', marginBottom: 8 }}>
                 {phase === 'correct' ? '✓ Correct' : '✗ Incorrect'}
               </div>
-              <div style={{ fontSize: '1.6rem', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 700 }}>{card.kr}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ fontSize: '1.6rem', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 700 }}>{card.kr}</div>
+                <button
+                  onClick={() => speak(card.kr)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: '1rem', padding: '2px 4px' }}
+                  title="Pronounce"
+                >♪</button>
+              </div>
               <div style={{ fontSize: '0.82rem', color: 'var(--text3)', marginTop: 4, fontStyle: 'italic' }}>{card.rom}</div>
             </div>
           </div>
@@ -303,6 +321,7 @@ function ReverseQuiz({ card, onResult }) {
 
 export default function StudyView({ config, store, allSets, onDone }) {
   const { words, mode, forceAll } = config;
+  const { speak } = useSpeech();
   const [queue, setQueue] = useState(() => {
     if (forceAll) {
       store.forceAllDue(words);
@@ -406,13 +425,13 @@ export default function StudyView({ config, store, allSets, onDone }) {
       <div className="container" style={{ flex: 1, paddingTop: 32, paddingBottom: 48 }}>
         <div key={cardKey}>
           {mode === 'recall' && (
-            <RecallQuiz card={store.cards[card.kr] || card} onResult={handleResult} />
+            <RecallQuiz card={store.cards[card.kr] || card} onResult={handleResult} speak={speak} />
           )}
           {mode === 'mcq' && (
-            <MCQQuiz card={store.cards[card.kr] || card} allCards={allCards} onResult={handleResult} />
+            <MCQQuiz card={store.cards[card.kr] || card} allCards={allCards} onResult={handleResult} speak={speak} />
           )}
           {mode === 'reverse' && (
-            <ReverseQuiz card={store.cards[card.kr] || card} onResult={handleResult} />
+            <ReverseQuiz card={store.cards[card.kr] || card} onResult={handleResult} speak={speak} />
           )}
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useVocabStore, loadFromSupabase, migrateGuestData } from './hooks/useVocabStore';
+import { useVocabStore, loadFromSupabase, migrateGuestData, saveDefaultMode } from './hooks/useVocabStore';
 import { useAuth } from './hooks/useAuth';
 import { BUILTIN_VOCAB } from './data/vocab';
 import HomeView from './components/HomeView';
@@ -7,6 +7,7 @@ import StudyView from './components/StudyView';
 import StatsView from './components/StatsView';
 import ImportView from './components/ImportView';
 import AuthView from './components/AuthView';
+import SettingsView from './components/SettingsView';
 import './index.css';
 
 export default function App() {
@@ -15,6 +16,7 @@ export default function App() {
   const [migrationBanner, setMigrationBanner] = useState(false);
   const [view, setView] = useState('home');
   const [sessionConfig, setSessionConfig] = useState(null);
+  const [defaultMode, setDefaultMode] = useState('recall');
 
   const userId = auth.user?.id ?? null;
   const store = useVocabStore(userId);
@@ -26,8 +28,9 @@ export default function App() {
     const hasGuest = !!localStorage.getItem('korean_vocab_v1');
     if (hasGuest) setMigrationBanner(true);
 
-    loadFromSupabase(userId).then(({ cards, customSets }) => {
-      store.replaceState({ cards, customSets });
+    loadFromSupabase(userId).then(({ cards, customSets, defaultMode: mode, streak, last_studied }) => {
+      store.replaceState({ cards, customSets, streak, last_studied });
+      setDefaultMode(mode);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
@@ -37,8 +40,9 @@ export default function App() {
     localStorage.removeItem('korean_vocab_v1');
     setMigrationBanner(false);
     // Reload merged state
-    loadFromSupabase(userId).then(({ cards, customSets }) => {
-      store.replaceState({ cards, customSets });
+    loadFromSupabase(userId).then(({ cards, customSets, defaultMode: mode, streak, last_studied }) => {
+      store.replaceState({ cards, customSets, streak, last_studied });
+      setDefaultMode(mode);
     });
   }
 
@@ -50,6 +54,7 @@ export default function App() {
   }
 
   function endSession() {
+    store.updateStreak();
     setSessionConfig(null);
     setView('home');
   }
@@ -110,7 +115,10 @@ export default function App() {
           store={store}
           allSets={allSets}
           auth={auth}
+          streak={store.streak}
+          defaultMode={defaultMode}
           onSignIn={() => setGuestMode(false)}
+          onSettings={() => setView('settings')}
           onStart={startSession}
           onStats={() => setView('stats')}
           onImport={() => setView('import')}
@@ -133,6 +141,14 @@ export default function App() {
       {view === 'import' && (
         <ImportView
           store={store}
+          onBack={() => setView('home')}
+        />
+      )}
+      {view === 'settings' && (
+        <SettingsView
+          auth={auth}
+          defaultMode={defaultMode}
+          onModeChange={(mode) => { setDefaultMode(mode); saveDefaultMode(userId, mode); }}
           onBack={() => setView('home')}
         />
       )}

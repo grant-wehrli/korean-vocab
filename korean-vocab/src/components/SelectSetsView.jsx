@@ -43,6 +43,18 @@ export default function SelectSetsView({ allSets, store, onStart, onBack }) {
 
       <div className="container" style={{ flex: 1 }}>
         {/* Set selection */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 6 }}>
+          <button
+            onClick={() => setSelected(
+              selected.size === Object.keys(allSets).length
+                ? new Set()
+                : new Set(Object.keys(allSets))
+            )}
+            style={{ fontSize: '0.75rem', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0' }}
+          >
+            {selected.size === Object.keys(allSets).length ? 'Deselect all' : 'Select all'}
+          </button>
+        </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
           {Object.entries(allSets).map(([name, words]) => {
             const isSelected = selected.has(name);
