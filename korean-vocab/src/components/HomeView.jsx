@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { BUILTIN_VOCAB } from '../data/vocab';
 import AccountButton from './AccountButton';
 
@@ -8,9 +8,11 @@ const MODES = [
   { id: 'reverse', label: 'Reverse' },
 ];
 
-export default function HomeView({ store, allSets, auth, onSignIn, onStart, onStats, onImport }) {
+export default function HomeView({ store, allSets, auth, streak, defaultMode, onSignIn, onSettings, onStart, onStats, onImport }) {
   const [selected, setSelected] = useState(() => new Set(Object.keys(allSets)));
-  const [mode, setMode] = useState('recall');
+  const [mode, setMode] = useState(defaultMode || 'recall');
+
+  useEffect(() => { setMode(defaultMode || 'recall'); }, [defaultMode]);
 
   const stats = useMemo(() => store.getStats(), [store]);
 
@@ -53,7 +55,7 @@ export default function HomeView({ store, allSets, auth, onSignIn, onStart, onSt
       <div style={{ padding: '32px 24px 16px', textAlign: 'center', position: 'relative' }}>
         {auth && (
           <div style={{ position: 'absolute', top: 16, right: 16 }}>
-            <AccountButton auth={auth} onSignIn={onSignIn} />
+            <AccountButton auth={auth} onSignIn={onSignIn} onSettings={onSettings} />
           </div>
         )}
         <div className="anim-fade-up" style={{ animationDelay: '0ms' }}>
@@ -87,11 +89,29 @@ export default function HomeView({ store, allSets, auth, onSignIn, onStart, onSt
               <span style={{ color: 'var(--text2)' }}>{stats.mature} / {stats.total} mature</span>
             </>
           )}
+          {streak > 0 && (
+            <>
+              <span style={{ margin: '0 8px' }}>·</span>
+              <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{streak} day streak</span>
+            </>
+          )}
         </div>
       </div>
 
       <div className="container anim-fade-up" style={{ animationDelay: '100ms', flex: 1 }}>
         {/* Set selection */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 6 }}>
+          <button
+            onClick={() => setSelected(
+              selected.size === Object.keys(allSets).length
+                ? new Set()
+                : new Set(Object.keys(allSets))
+            )}
+            style={{ fontSize: '0.75rem', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0' }}
+          >
+            {selected.size === Object.keys(allSets).length ? 'Deselect all' : 'Select all'}
+          </button>
+        </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
           {Object.entries(allSets).map(([name, words]) => {
             const isSelected = selected.has(name);
