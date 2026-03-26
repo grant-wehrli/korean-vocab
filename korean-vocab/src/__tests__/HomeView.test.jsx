@@ -152,4 +152,39 @@ describe('HomeView', () => {
     render(<HomeView {...defaultProps} />);
     expect(screen.getByText('단어')).toBeInTheDocument();
   });
+
+  it('shows streak when streak > 0', () => {
+    render(<HomeView {...defaultProps} streak={5} />);
+    expect(screen.getByText('5 day streak')).toBeInTheDocument();
+  });
+
+  describe('Learn tab', () => {
+    it('switching to Learn tab shows "Start Learning" button', () => {
+      render(<HomeView {...defaultProps} onLearn={vi.fn()} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Learn' }));
+      expect(screen.getByRole('button', { name: /start learning/i })).toBeInTheDocument();
+    });
+
+    it('Learn tab hides mode pills', () => {
+      render(<HomeView {...defaultProps} onLearn={vi.fn()} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Learn' }));
+      expect(screen.queryByRole('button', { name: 'Recall' })).not.toBeInTheDocument();
+    });
+
+    it('calls onLearn with selected words when Start Learning is clicked', () => {
+      const onLearn = vi.fn();
+      render(<HomeView {...defaultProps} onLearn={onLearn} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Learn' }));
+      fireEvent.click(screen.getByRole('button', { name: /start learning/i }));
+      expect(onLearn).toHaveBeenCalledWith(expect.objectContaining({ words: expect.arrayContaining([word1, word2]) }));
+    });
+
+    it('Start Learning is disabled when no sets selected', () => {
+      render(<HomeView {...defaultProps} onLearn={vi.fn()} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Learn' }));
+      // Deselect all
+      fireEvent.click(screen.getByRole('button', { name: /deselect all/i }));
+      expect(screen.getByRole('button', { name: /select a set/i })).toBeDisabled();
+    });
+  });
 });
