@@ -253,4 +253,48 @@ describe('useVocabStore', () => {
       expect(result.current.customSets).toEqual({});
     });
   });
+
+  describe('updateStreak', () => {
+    it('sets streak to 1 on first study session', () => {
+      const { result } = renderHook(() => useVocabStore());
+      act(() => result.current.updateStreak());
+      expect(result.current.streak).toBe(1);
+    });
+
+    it('does not increment streak if already studied today', () => {
+      const { result } = renderHook(() => useVocabStore());
+      act(() => result.current.updateStreak());
+      act(() => result.current.updateStreak());
+      expect(result.current.streak).toBe(1);
+    });
+
+    it('increments streak when studied on consecutive days', () => {
+      const { result } = renderHook(() => useVocabStore());
+      // Seed state as if studied yesterday
+      act(() => result.current.replaceState({
+        cards: {}, customSets: {}, streak: 3, last_studied: yesterday,
+      }));
+      act(() => result.current.updateStreak());
+      expect(result.current.streak).toBe(4);
+    });
+
+    it('resets streak to 1 when a day is skipped', () => {
+      const { result } = renderHook(() => useVocabStore());
+      // Seed state as if studied 2 days ago (skipped yesterday)
+      const twoDaysAgo = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
+      act(() => result.current.replaceState({
+        cards: {}, customSets: {}, streak: 5, last_studied: twoDaysAgo,
+      }));
+      act(() => result.current.updateStreak());
+      expect(result.current.streak).toBe(1);
+    });
+
+    it('persists streak to localStorage', () => {
+      const { result } = renderHook(() => useVocabStore());
+      act(() => result.current.updateStreak());
+      const stored = JSON.parse(localStorage.getItem('korean_vocab_v1'));
+      expect(stored.streak).toBe(1);
+      expect(stored.last_studied).toBe(today);
+    });
+  });
 });
