@@ -51,30 +51,12 @@ export default function HomeView({ store, allSets, auth, streak, defaultMode, on
 
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
-      <div style={{ padding: '32px 24px 16px', textAlign: 'center', position: 'relative' }}>
-        {auth && (
-          <div style={{ position: 'absolute', top: 16, right: 16 }}>
-            <AccountButton auth={auth} onSignIn={onSignIn} onSettings={onSettings} />
-          </div>
-        )}
-        <div className="anim-fade-up" style={{ animationDelay: '0ms' }}>
-          <div style={{
-            fontSize: '2.6rem',
-            fontFamily: "'Noto Sans KR', sans-serif",
-            fontWeight: 700,
-            letterSpacing: '-0.02em',
-            color: 'var(--text)',
-            lineHeight: 1,
-          }}>단어</div>
-          <div className="display" style={{
-            fontSize: '0.78rem',
-            letterSpacing: '0.18em',
-            color: 'var(--accent)',
-            marginTop: 6,
-            textTransform: 'uppercase',
-          }}>Vocabulary Trainer</div>
+      {/* Nav bar */}
+      <div className="anim-fade-up" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px 8px', animationDelay: '0ms' }}>
+        <div style={{ fontSize: '1.3rem', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)' }}>
+          단어
         </div>
+        {auth && <AccountButton auth={auth} onSignIn={onSignIn} onSettings={onSettings} />}
       </div>
 
       {/* Compact stats */}
@@ -99,6 +81,40 @@ export default function HomeView({ store, allSets, auth, streak, defaultMode, on
       </div>
 
       <div className="container anim-fade-up" style={{ animationDelay: '100ms', flex: 1 }}>
+        {/* Mode pills */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          {MODES.map(m => (
+            <button
+              key={m.id}
+              onClick={() => setMode(m.id)}
+              style={{
+                flex: 1,
+                padding: '9px 0',
+                background: mode === m.id ? 'rgba(0,199,190,0.12)' : 'var(--surface)',
+                border: `1px solid ${mode === m.id ? 'var(--accent)' : 'var(--border)'}`,
+                borderRadius: 'var(--radius-sm)',
+                color: mode === m.id ? 'var(--accent)' : 'var(--text3)',
+                fontSize: '0.78rem',
+                fontWeight: mode === m.id ? 600 : 400,
+                cursor: 'pointer',
+                transition: 'all 0.12s',
+              }}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Start */}
+        <button
+          className="btn btn-primary btn-full btn-lg"
+          onClick={handleStart}
+          disabled={selected.size === 0 || dueCount === 0}
+          style={{ marginBottom: 16, opacity: (selected.size === 0 || dueCount === 0) ? 0.4 : 1 }}
+        >
+          {startLabel}
+        </button>
+
         {/* Set selection */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 6 }}>
           <button
@@ -112,7 +128,7 @@ export default function HomeView({ store, allSets, auth, streak, defaultMode, on
             {selected.size === Object.keys(allSets).length ? 'Deselect all' : 'Select all'}
           </button>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
           {Object.entries(allSets).map(([name, words]) => {
             const isSelected = selected.has(name);
             const isCustom = !(name in BUILTIN_VOCAB);
@@ -125,7 +141,7 @@ export default function HomeView({ store, allSets, auth, streak, defaultMode, on
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  padding: '12px 14px',
+                  padding: '9px 12px',
                   background: isSelected ? 'rgba(0,199,190,0.10)' : 'var(--surface)',
                   border: `1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`,
                   borderRadius: 'var(--radius)',
@@ -159,55 +175,13 @@ export default function HomeView({ store, allSets, auth, streak, defaultMode, on
           })}
         </div>
 
-        {/* Mode pills */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-          {MODES.map(m => (
-            <button
-              key={m.id}
-              onClick={() => setMode(m.id)}
-              style={{
-                flex: 1,
-                padding: '9px 0',
-                background: mode === m.id ? 'rgba(0,199,190,0.12)' : 'var(--surface)',
-                border: `1px solid ${mode === m.id ? 'var(--accent)' : 'var(--border)'}`,
-                borderRadius: 'var(--radius-sm)',
-                color: mode === m.id ? 'var(--accent)' : 'var(--text3)',
-                fontSize: '0.78rem',
-                fontWeight: mode === m.id ? 600 : 400,
-                cursor: 'pointer',
-                transition: 'all 0.12s',
-              }}
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Start */}
-        <button
-          className="btn btn-primary btn-full btn-lg"
-          onClick={handleStart}
-          disabled={selected.size === 0 || dueCount === 0}
-          style={{ marginBottom: 10, opacity: (selected.size === 0 || dueCount === 0) ? 0.4 : 1 }}
-        >
-          {startLabel}
-        </button>
-
-        {/* Study again */}
-        {selectedWords.length > 0 && (
-          <button
-            className="btn btn-ghost btn-full"
-            onClick={handleStudyAgain}
-            style={{ marginBottom: 14 }}
-          >
-            ↺ Study again
-          </button>
-        )}
-
-        {/* Secondary links */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 32 }}>
-          <button className="btn btn-ghost" onClick={onStats}>↗ Stats</button>
-          <button className="btn btn-ghost" onClick={onImport}>+ Import</button>
+        {/* Secondary actions */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 32 }}>
+          {selectedWords.length > 0 && (
+            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={handleStudyAgain}>↺ Again</button>
+          )}
+          <button className="btn btn-ghost" style={{ flex: 1 }} onClick={onStats}>↗ Stats</button>
+          <button className="btn btn-ghost" style={{ flex: 1 }} onClick={onImport}>+ Import</button>
         </div>
       </div>
     </div>
