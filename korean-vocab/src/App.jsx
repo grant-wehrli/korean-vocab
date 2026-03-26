@@ -8,6 +8,7 @@ import StatsView from './components/StatsView';
 import ImportView from './components/ImportView';
 import AuthView from './components/AuthView';
 import SettingsView from './components/SettingsView';
+import LearnView from './components/LearnView';
 import './index.css';
 
 export default function App() {
@@ -120,6 +121,7 @@ export default function App() {
           onSignIn={() => setGuestMode(false)}
           onSettings={() => setView('settings')}
           onStart={startSession}
+          onLearn={({ words }) => { setSessionConfig({ words }); setView('learn'); }}
           onStats={() => setView('stats')}
           onImport={() => setView('import')}
         />
@@ -142,6 +144,20 @@ export default function App() {
         <ImportView
           store={store}
           onBack={() => setView('home')}
+        />
+      )}
+      {view === 'learn' && sessionConfig && (
+        <LearnView
+          words={sessionConfig.words}
+          onDone={({ studyNow }) => {
+            store.initCards(sessionConfig.words);
+            if (studyNow) {
+              startSession({ words: sessionConfig.words, mode: defaultMode, forceAll: true });
+            } else {
+              setSessionConfig(null);
+              setView('home');
+            }
+          }}
         />
       )}
       {view === 'settings' && (
