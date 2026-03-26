@@ -88,7 +88,8 @@ describe('App', () => {
 
   it('startSession transitions to StudyView; endSession returns to HomeView', () => {
     renderApp();
-    // All sets pre-selected by default — Start button is enabled
+    // Select a set first (sets are deselected by default)
+    fireEvent.click(screen.getAllByRole('button').find(b => b.textContent.includes('Greetings')));
     fireEvent.click(screen.getByRole('button', { name: /start/i }));
     // StudyView should be visible (shows counter like "1/N")
     expect(screen.getByText(/\d+\/\d+/)).toBeInTheDocument();
