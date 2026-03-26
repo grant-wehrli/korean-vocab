@@ -171,7 +171,7 @@ describe('StudyView', () => {
       render(
         <StudyView config={makeConfig(manyWords, 'mcq')} store={store} allSets={{}} onDone={vi.fn()} />
       );
-      const choiceButtons = screen.getAllByRole('button').filter(b => !b.textContent.includes('✕'));
+      const choiceButtons = screen.getAllByRole('button').filter(b => !b.textContent.includes('✕') && !b.textContent.includes('♪'));
       fireEvent.click(choiceButtons[0]);
       await act(async () => { vi.runAllTimers(); });
       expect(store.reviewCard).toHaveBeenCalled();

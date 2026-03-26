@@ -132,7 +132,7 @@ export default function HomeView({ store, allSets, auth, streak, defaultMode, on
           {Object.entries(allSets).map(([name, words]) => {
             const isSelected = selected.has(name);
             const isCustom = !(name in BUILTIN_VOCAB);
-            const due = store.getDueCards(words).length;
+            const studied = words.filter(w => store.cards[w.kr]).length;
             return (
               <button
                 key={name}
@@ -165,7 +165,7 @@ export default function HomeView({ store, allSets, auth, streak, defaultMode, on
                   <div>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text)' }}>{name}</div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--text3)', marginTop: 1 }}>
-                      {words.length}w · {due} studied
+                      {words.length} terms · {studied} studied
                     </div>
                   </div>
                 </div>
