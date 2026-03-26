@@ -33,7 +33,6 @@ describe('HomeView', () => {
   it('renders the app title 단어', () => {
     render(<HomeView {...defaultProps} />);
     expect(screen.getByText('단어')).toBeInTheDocument();
-    expect(screen.getByText('Vocabulary Trainer')).toBeInTheDocument();
   });
 
   it('shows all sets pre-selected by default', () => {
@@ -106,10 +105,10 @@ describe('HomeView', () => {
     expect(words).toContainEqual(word2);
   });
 
-  it('"Study again" button starts with forceAll=true', () => {
+  it('"Again" button starts with forceAll=true', () => {
     const onStart = vi.fn();
     render(<HomeView {...defaultProps} onStart={onStart} />);
-    fireEvent.click(screen.getByRole('button', { name: /study again/i }));
+    fireEvent.click(screen.getByRole('button', { name: /again/i }));
     expect(onStart).toHaveBeenCalledWith(expect.objectContaining({ forceAll: true }));
   });
 
