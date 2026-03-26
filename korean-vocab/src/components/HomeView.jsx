@@ -10,7 +10,7 @@ const MODES = [
 
 export default function HomeView({ store, allSets, auth, streak, defaultMode, onSignIn, onSettings, onStart, onStats, onImport, onLearn }) {
   const [tab, setTab] = useState('study');
-  const [selected, setSelected] = useState(() => new Set(Object.keys(allSets)));
+  const [selected, setSelected] = useState(() => new Set());
   const [mode, setMode] = useState(defaultMode || 'recall');
 
   useEffect(() => { setMode(defaultMode || 'recall'); }, [defaultMode]);

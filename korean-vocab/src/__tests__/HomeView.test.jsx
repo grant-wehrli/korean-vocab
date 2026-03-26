@@ -35,13 +35,13 @@ describe('HomeView', () => {
     expect(screen.getByText('단어')).toBeInTheDocument();
   });
 
-  it('shows all sets pre-selected by default', () => {
+  it('shows all sets deselected by default', () => {
     render(<HomeView {...defaultProps} />);
     // Both sets appear as toggle buttons
     expect(screen.getByText('Transportation')).toBeInTheDocument();
     expect(screen.getByText('Work & Office')).toBeInTheDocument();
-    // Start is enabled because both selected and cards are due
-    expect(screen.getByRole('button', { name: /start/i })).not.toBeDisabled();
+    // Start is disabled because nothing is selected
+    expect(screen.getByRole('button', { name: /select a set/i })).toBeDisabled();
   });
 
   it('lists all available sets', () => {
@@ -51,31 +51,32 @@ describe('HomeView', () => {
     });
   });
 
-  it('toggling a set off disables Start if no sets remain selected', () => {
+  it('toggling a set on then off disables Start', () => {
     render(<HomeView {...defaultProps} />);
-    // Deselect both sets
-    fireEvent.click(screen.getByText('Transportation'));
-    fireEvent.click(screen.getByText('Work & Office'));
+    fireEvent.click(screen.getByText('Transportation')); // select
+    fireEvent.click(screen.getByText('Transportation')); // deselect again
     expect(screen.getByRole('button', { name: /select a set/i })).toBeDisabled();
   });
 
-  it('toggling a set off then on re-enables it', () => {
+  it('toggling a set on then off then on re-enables it', () => {
     render(<HomeView {...defaultProps} />);
+    fireEvent.click(screen.getByText('Transportation')); // select
     fireEvent.click(screen.getByText('Transportation')); // deselect
     fireEvent.click(screen.getByText('Transportation')); // reselect
-    // Start should still show cards
     expect(screen.getByRole('button', { name: /start/i })).not.toBeDisabled();
   });
 
   it('shows "No cards due" when no due cards and forceAll off', () => {
     const store = makeStore({ getDueCards: () => [] });
     render(<HomeView {...defaultProps} store={store} />);
+    fireEvent.click(screen.getByText('Transportation')); // select a set
     expect(screen.getByRole('button', { name: /no cards due/i })).toBeDisabled();
   });
 
   it('mode pills: clicking MCQ switches mode', () => {
     const onStart = vi.fn();
     render(<HomeView {...defaultProps} onStart={onStart} />);
+    fireEvent.click(screen.getByText('Transportation')); // select a set
     fireEvent.click(screen.getByRole('button', { name: 'MCQ' }));
     fireEvent.click(screen.getByRole('button', { name: /start/i }));
     expect(onStart).toHaveBeenCalledWith(expect.objectContaining({ mode: 'mcq' }));
@@ -84,6 +85,7 @@ describe('HomeView', () => {
   it('mode pills: clicking Reverse switches mode', () => {
     const onStart = vi.fn();
     render(<HomeView {...defaultProps} onStart={onStart} />);
+    fireEvent.click(screen.getByText('Transportation')); // select a set
     fireEvent.click(screen.getByRole('button', { name: 'Reverse' }));
     fireEvent.click(screen.getByRole('button', { name: /start/i }));
     expect(onStart).toHaveBeenCalledWith(expect.objectContaining({ mode: 'reverse' }));
@@ -92,6 +94,7 @@ describe('HomeView', () => {
   it('default mode is recall', () => {
     const onStart = vi.fn();
     render(<HomeView {...defaultProps} onStart={onStart} />);
+    fireEvent.click(screen.getByText('Transportation')); // select a set
     fireEvent.click(screen.getByRole('button', { name: /start/i }));
     expect(onStart).toHaveBeenCalledWith(expect.objectContaining({ mode: 'recall' }));
   });
@@ -99,6 +102,8 @@ describe('HomeView', () => {
   it('onStart is called with correct words config', () => {
     const onStart = vi.fn();
     render(<HomeView {...defaultProps} onStart={onStart} />);
+    fireEvent.click(screen.getByText('Transportation')); // select set 1
+    fireEvent.click(screen.getByText('Work & Office'));   // select set 2
     fireEvent.click(screen.getByRole('button', { name: /start/i }));
     const { words } = onStart.mock.calls[0][0];
     expect(words).toContainEqual(word1);
@@ -108,6 +113,7 @@ describe('HomeView', () => {
   it('"Again" button starts with forceAll=true', () => {
     const onStart = vi.fn();
     render(<HomeView {...defaultProps} onStart={onStart} />);
+    fireEvent.click(screen.getByText('Transportation')); // select a set so Again appears
     fireEvent.click(screen.getByRole('button', { name: /again/i }));
     expect(onStart).toHaveBeenCalledWith(expect.objectContaining({ forceAll: true }));
   });
@@ -162,6 +168,7 @@ describe('HomeView', () => {
     it('switching to Learn tab shows "Start Learning" button', () => {
       render(<HomeView {...defaultProps} onLearn={vi.fn()} />);
       fireEvent.click(screen.getByRole('button', { name: 'Learn' }));
+      fireEvent.click(screen.getByText('Transportation')); // select a set
       expect(screen.getByRole('button', { name: /start learning/i })).toBeInTheDocument();
     });
 
@@ -175,15 +182,15 @@ describe('HomeView', () => {
       const onLearn = vi.fn();
       render(<HomeView {...defaultProps} onLearn={onLearn} />);
       fireEvent.click(screen.getByRole('button', { name: 'Learn' }));
+      fireEvent.click(screen.getByText('Transportation')); // select a set
       fireEvent.click(screen.getByRole('button', { name: /start learning/i }));
-      expect(onLearn).toHaveBeenCalledWith(expect.objectContaining({ words: expect.arrayContaining([word1, word2]) }));
+      expect(onLearn).toHaveBeenCalledWith(expect.objectContaining({ words: expect.arrayContaining([word1]) }));
     });
 
     it('Start Learning is disabled when no sets selected', () => {
       render(<HomeView {...defaultProps} onLearn={vi.fn()} />);
       fireEvent.click(screen.getByRole('button', { name: 'Learn' }));
-      // Deselect all
-      fireEvent.click(screen.getByRole('button', { name: /deselect all/i }));
+      // Nothing selected by default
       expect(screen.getByRole('button', { name: /select a set/i })).toBeDisabled();
     });
   });
