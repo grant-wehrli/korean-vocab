@@ -66,12 +66,6 @@ describe('App', () => {
     expect(screen.getByText('Stats')).toBeInTheDocument();
   });
 
-  it('navigates to ImportView when Import button is clicked', () => {
-    renderApp();
-    fireEvent.click(screen.getByRole('button', { name: /import/i }));
-    expect(screen.getByText('Import')).toBeInTheDocument();
-  });
-
   it('navigates back to HomeView from StatsView', () => {
     renderApp();
     fireEvent.click(screen.getByRole('button', { name: /stats/i }));
@@ -79,12 +73,6 @@ describe('App', () => {
     expect(screen.getByText('단어')).toBeInTheDocument();
   });
 
-  it('navigates back to HomeView from ImportView', () => {
-    renderApp();
-    fireEvent.click(screen.getByRole('button', { name: /import/i }));
-    fireEvent.click(screen.getByRole('button', { name: /back/i }));
-    expect(screen.getByText('단어')).toBeInTheDocument();
-  });
 
   it('startSession transitions to StudyView; endSession returns to HomeView', () => {
     renderApp();

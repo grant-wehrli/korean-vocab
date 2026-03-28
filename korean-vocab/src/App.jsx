@@ -5,7 +5,6 @@ import { BUILTIN_VOCAB } from './data/vocab';
 import HomeView from './components/HomeView';
 import StudyView from './components/StudyView';
 import StatsView from './components/StatsView';
-import ImportView from './components/ImportView';
 import AuthView from './components/AuthView';
 import SettingsView from './components/SettingsView';
 import LearnView from './components/LearnView';
@@ -123,7 +122,6 @@ export default function App() {
           onStart={startSession}
           onLearn={({ words }) => { setSessionConfig({ words }); setView('learn'); }}
           onStats={() => setView('stats')}
-          onImport={() => setView('import')}
         />
       )}
       {view === 'study' && sessionConfig && (
@@ -136,12 +134,6 @@ export default function App() {
       )}
       {view === 'stats' && (
         <StatsView
-          store={store}
-          onBack={() => setView('home')}
-        />
-      )}
-      {view === 'import' && (
-        <ImportView
           store={store}
           onBack={() => setView('home')}
         />
