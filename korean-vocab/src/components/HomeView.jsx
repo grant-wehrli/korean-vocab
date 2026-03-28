@@ -8,7 +8,7 @@ const MODES = [
   { id: 'reverse', label: 'Reverse' },
 ];
 
-export default function HomeView({ store, allSets, auth, streak, defaultMode, onSignIn, onSettings, onStart, onStats, onImport, onLearn }) {
+export default function HomeView({ store, allSets, auth, streak, defaultMode, onSignIn, onSettings, onStart, onStats, onLearn }) {
   const [tab, setTab] = useState('study');
   const [selected, setSelected] = useState(() => new Set());
   const [mode, setMode] = useState(defaultMode || 'recall');
@@ -223,7 +223,6 @@ export default function HomeView({ store, allSets, auth, streak, defaultMode, on
               <button className="btn btn-ghost" style={{ flex: 1 }} onClick={handleStudyAgain}>↺ Again</button>
             )}
             <button className="btn btn-ghost" style={{ flex: 1 }} onClick={onStats}>↗ Stats</button>
-            <button className="btn btn-ghost" style={{ flex: 1 }} onClick={onImport}>+ Import</button>
           </div>
         )}
       </div>

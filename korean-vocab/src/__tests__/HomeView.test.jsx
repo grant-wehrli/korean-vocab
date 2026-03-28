@@ -26,7 +26,6 @@ const defaultProps = {
   allSets,
   onStart: vi.fn(),
   onStats: vi.fn(),
-  onImport: vi.fn(),
 };
 
 describe('HomeView', () => {
@@ -123,13 +122,6 @@ describe('HomeView', () => {
     render(<HomeView {...defaultProps} onStats={onStats} />);
     fireEvent.click(screen.getByRole('button', { name: /stats/i }));
     expect(onStats).toHaveBeenCalledOnce();
-  });
-
-  it('calls onImport when Import button is clicked', () => {
-    const onImport = vi.fn();
-    render(<HomeView {...defaultProps} onImport={onImport} />);
-    fireEvent.click(screen.getByRole('button', { name: /import/i }));
-    expect(onImport).toHaveBeenCalledOnce();
   });
 
   it('shows due count in stats line', () => {
