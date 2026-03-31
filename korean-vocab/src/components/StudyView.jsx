@@ -382,14 +382,19 @@ export default function StudyView({ config, store, allSets, onDone }) {
   const [cardKey, setCardKey] = useState(0);
 
   const card = queue[idx];
-  const allCards = useMemo(() =>
-    Object.values(store.cards).length >= 4
-      ? Object.values(store.cards)
-      : words.map(w => ({ kr: w.kr, rom: w.rom, en: w.en })),
-    [store.cards, words]);
+  const allCards = useMemo(() => {
+    // Only count stored cards that have an `en` field — cards reviewed before
+    // being initialized may be missing identity fields and would produce empty MCQ pills.
+    const stored = Object.values(store.cards).filter(c => c.en);
+    return stored.length >= 4
+      ? stored
+      : words.map(w => ({ kr: w.kr, rom: w.rom, en: w.en }));
+  }, [store.cards, words]);
 
   function handleResult(quality) {
-    store.reviewCard(card.kr, quality);
+    // Pass the current word as a fallback so reviewCard can preserve kr/rom/en
+    // even if this card hasn't been initialized in the store yet.
+    store.reviewCard(card.kr, quality, card);
     if (quality >= 3) setResults(r => ({ ...r, correct: r.correct + 1 }));
     else setResults(r => ({ ...r, wrong: r.wrong + 1 }));
 

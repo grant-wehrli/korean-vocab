@@ -94,7 +94,7 @@ describe('StudyView', () => {
       fireEvent.change(screen.getByPlaceholderText(/english meaning/i), { target: { value: 'hello' } });
       fireEvent.click(screen.getByRole('button', { name: /check/i }));
       await act(async () => { vi.runAllTimers(); });
-      expect(store.reviewCard).toHaveBeenCalledWith('안녕', 4);
+      expect(store.reviewCard).toHaveBeenCalledWith('안녕', 4, expect.objectContaining({ kr: '안녕' }));
     });
 
     it('auto-advances and calls store.reviewCard(quality=1) after wrong answer', async () => {
@@ -105,7 +105,7 @@ describe('StudyView', () => {
       fireEvent.change(screen.getByPlaceholderText(/english meaning/i), { target: { value: 'wrong' } });
       fireEvent.click(screen.getByRole('button', { name: /check/i }));
       await act(async () => { vi.runAllTimers(); });
-      expect(store.reviewCard).toHaveBeenCalledWith('안녕', 1);
+      expect(store.reviewCard).toHaveBeenCalledWith('안녕', 1, expect.objectContaining({ kr: '안녕' }));
     });
 
     it('shows completion screen after last card', async () => {
@@ -141,7 +141,7 @@ describe('StudyView', () => {
       );
       fireEvent.click(screen.getByRole('button', { name: /peek/i }));
       await act(async () => { vi.runAllTimers(); });
-      expect(store.reviewCard).toHaveBeenCalledWith('안녕', 1);
+      expect(store.reviewCard).toHaveBeenCalledWith('안녕', 1, expect.objectContaining({ kr: '안녕' }));
     });
 
     it('completion screen calls onDone', async () => {
@@ -155,6 +155,36 @@ describe('StudyView', () => {
       await act(async () => { vi.runAllTimers(); });
       fireEvent.click(screen.getByRole('button', { name: /done/i }));
       expect(onDone).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('MCQ mode — empty-pill regression', () => {
+    // Cards stored without `en` (e.g. reviewed before being initCards'd) used to
+    // produce empty MCQ choice pills. Verify the guard filters them out.
+    it('MCQ pills are never empty even when store has cards without en', () => {
+      const badCards = {
+        // 4 cards so the ">= 4" path is taken — but two are missing `en`
+        '안녕': { kr: '안녕', rom: 'annyeong', ef: 2.5, n: 1, interval: 1, nextReview: '2026-01-01' },
+        '감사': { kr: '감사', rom: 'gamsa', ef: 2.5, n: 1, interval: 1, nextReview: '2026-01-01' },
+        '사랑': { kr: '사랑', rom: 'sarang', en: 'love', ef: 2.5, n: 1, interval: 1, nextReview: '2026-01-01' },
+        '학교': { kr: '학교', rom: 'hakgyo', en: 'school', ef: 2.5, n: 1, interval: 1, nextReview: '2026-01-01' },
+      };
+      const manyWords = [word1, word2, word3, word4, word5];
+      render(
+        <StudyView
+          config={makeConfig(manyWords, 'mcq')}
+          store={makeStore(badCards)}
+          allSets={{}}
+          onDone={vi.fn()}
+        />
+      );
+      // All rendered choice buttons should have non-empty text
+      const choiceButtons = screen.getAllByRole('button').filter(
+        b => !b.textContent.includes('✕') && !b.textContent.includes('♪')
+      );
+      choiceButtons.forEach(btn => {
+        expect(btn.textContent.trim()).not.toBe('');
+      });
     });
   });
 
@@ -253,7 +283,7 @@ describe('StudyView', () => {
       fireEvent.change(screen.getByPlaceholderText(/한국어 or romanization/i), { target: { value: 'annyeong' } });
       fireEvent.click(screen.getByRole('button', { name: /check/i }));
       await act(async () => { vi.runAllTimers(); });
-      expect(store.reviewCard).toHaveBeenCalledWith('안녕', 4);
+      expect(store.reviewCard).toHaveBeenCalledWith('안녕', 4, expect.objectContaining({ kr: '안녕' }));
     });
   });
 
@@ -311,7 +341,7 @@ describe('StudyView', () => {
       fireEvent.click(screen.getByRole('button', { name: /report issue/i }));
       fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
       await act(async () => { vi.runAllTimers(); });
-      expect(store.reviewCard).toHaveBeenCalledWith('안녕', 1);
+      expect(store.reviewCard).toHaveBeenCalledWith('안녕', 1, expect.objectContaining({ kr: '안녕' }));
     });
   });
 

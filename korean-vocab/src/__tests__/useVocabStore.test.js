@@ -81,8 +81,34 @@ describe('useVocabStore', () => {
 
     it('creates a card from scratch if not yet in store', () => {
       const { result } = renderHook(() => useVocabStore());
-      act(() => result.current.reviewCard(word1.kr, 4));
+      act(() => result.current.reviewCard(word1.kr, 4, word1));
       expect(result.current.cards[word1.kr]).toBeDefined();
+    });
+
+    it('preserves kr/rom/en when reviewing an uninitialised card via wordFallback', () => {
+      const { result } = renderHook(() => useVocabStore());
+      // Card has never been initCards'd — pass wordFallback so identity fields survive
+      act(() => result.current.reviewCard(word1.kr, 4, word1));
+      const card = result.current.cards[word1.kr];
+      expect(card.kr).toBe(word1.kr);
+      expect(card.rom).toBe(word1.rom);
+      expect(card.en).toBe(word1.en);
+    });
+
+    it('without wordFallback, reviewing an uninitialised card loses identity fields (known gap)', () => {
+      const { result } = renderHook(() => useVocabStore());
+      act(() => result.current.reviewCard(word1.kr, 4));
+      const card = result.current.cards[word1.kr];
+      // kr/rom/en are undefined when no fallback is provided — callers must pass wordFallback
+      expect(card.en).toBeUndefined();
+    });
+
+    it('does not overwrite identity fields when card is already in store', () => {
+      const { result } = renderHook(() => useVocabStore());
+      act(() => result.current.initCards([word1]));
+      act(() => result.current.reviewCard(word1.kr, 4, word1));
+      const card = result.current.cards[word1.kr];
+      expect(card.en).toBe(word1.en);
     });
 
     it('persists the updated card to localStorage', () => {
