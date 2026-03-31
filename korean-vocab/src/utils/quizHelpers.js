@@ -31,6 +31,16 @@ function normalizeNumerals(str) {
   return str.replace(/\b\d+\b/g, n => DIGIT_TO_WORD[n] ?? n);
 }
 
+// Common spelling/abbreviation variants that should be treated as equivalent
+const VARIANT_MAP = {
+  'ok': 'okay',
+  'alright': 'okay',
+};
+
+function normalizeVariants(str) {
+  return str.replace(/\b\w+\b/g, w => VARIANT_MAP[w] ?? w);
+}
+
 const STOP_WORDS = new Set([
   'a', 'an', 'the', 'to', 'i', 'it', 'its', 'is', 'are', 'was', 'be',
   'you', 'of', 'in', 'on', 'at',
@@ -59,8 +69,8 @@ function levenshtein(a, b) {
 }
 
 function flexMatchSingle(answer, correct) {
-  const a = normalizeNumerals(answer.toLowerCase().trim());
-  const c = correct.toLowerCase();
+  const a = normalizeVariants(normalizeNumerals(answer.toLowerCase().trim()));
+  const c = normalizeVariants(correct.toLowerCase());
   if (a === c) return true;
 
   const cTokens = tokenize(c);
