@@ -155,10 +155,12 @@ export function useVocabStore(userId) {
     });
   }, [update, userId]);
 
-  const reviewCard = useCallback((kr, quality) => {
+  const reviewCard = useCallback((kr, quality, wordFallback = null) => {
     update(prev => {
-      const card = prev.cards[kr] || {};
-      const next = sm2Next(card, quality);
+      // Use the stored card if it exists; otherwise use wordFallback so that
+      // kr/rom/en are never lost when reviewing a card for the first time.
+      const base = prev.cards[kr] || wordFallback || {};
+      const next = sm2Next(base, quality);
       syncCard(userId, next);
       return {
         ...prev,
