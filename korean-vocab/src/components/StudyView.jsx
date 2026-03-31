@@ -1,14 +1,16 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { shuffle, buildQueue, flexMatch, romFlexMatch } from '../utils/quizHelpers';
+import ReportModal from './ReportModal';
 import { useSpeech } from '../hooks/useSpeech';
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function AutoAdvance({ delay, onAdvance, children }) {
+function AutoAdvance({ delay, onAdvance, paused = false, children }) {
   useEffect(() => {
+    if (paused) return;
     const t = setTimeout(onAdvance, delay);
     return () => clearTimeout(t);
-  }, []);
+  }, [paused]);
   return children;
 }
 
@@ -16,12 +18,14 @@ function RecallQuiz({ card, onResult, speak }) {
   const [answer, setAnswer] = useState('');
   const [phase, setPhase] = useState('input'); // input | correct | wrong
   const [animKey, setAnimKey] = useState(0);
+  const [reporting, setReporting] = useState(false);
   const inputRef = useRef(null);
 
   useEffect(() => {
     setAnswer('');
     setPhase('input');
     setAnimKey(k => k + 1);
+    setReporting(false);
   }, [card.kr]);
 
   function submit() {
@@ -110,26 +114,46 @@ function RecallQuiz({ card, onResult, speak }) {
       )}
 
       {phase === 'wrong' && (
-        <AutoAdvance key={`wrong-${animKey}`} delay={1400} onAdvance={() => onResult(1)}>
-          <div className="anim-shake" style={{ marginTop: 32 }}>
-            <div style={{
-              background: 'rgba(255,55,95,0.08)',
-              border: '1px solid rgba(255,55,95,0.3)',
-              borderRadius: 'var(--radius)',
-              padding: '16px',
-            }}>
-              <div style={{ color: 'var(--red)', fontSize: '0.78rem', marginBottom: 4 }}>✗ Incorrect</div>
-              {answer && (
-                <div style={{ color: 'var(--text2)', fontSize: '0.82rem', marginBottom: 6 }}>
-                  You: <span style={{ color: 'var(--text)' }}>{answer}</span>
+        <>
+          <AutoAdvance key={`wrong-${animKey}`} delay={1400} onAdvance={() => onResult(1)} paused={reporting}>
+            <div className="anim-shake" style={{ marginTop: 32 }}>
+              <div style={{
+                background: 'rgba(255,55,95,0.08)',
+                border: '1px solid rgba(255,55,95,0.3)',
+                borderRadius: 'var(--radius)',
+                padding: '16px',
+              }}>
+                <div style={{ color: 'var(--red)', fontSize: '0.78rem', marginBottom: 4 }}>✗ Incorrect</div>
+                {answer && (
+                  <div style={{ color: 'var(--text2)', fontSize: '0.82rem', marginBottom: 6 }}>
+                    You: <span style={{ color: 'var(--text)' }}>{answer}</span>
+                  </div>
+                )}
+                <div style={{ color: 'var(--text2)', fontSize: '0.82rem' }}>
+                  Answer: <span style={{ color: 'var(--text)' }}>{card.en}</span>
                 </div>
-              )}
-              <div style={{ color: 'var(--text2)', fontSize: '0.82rem' }}>
-                Answer: <span style={{ color: 'var(--text)' }}>{card.en}</span>
+                <button
+                  onClick={() => setReporting(true)}
+                  style={{
+                    marginTop: 10, background: 'none', border: 'none',
+                    cursor: 'pointer', color: 'var(--text3)', fontSize: '0.72rem',
+                    padding: 0, textDecoration: 'underline',
+                  }}
+                >
+                  Report issue
+                </button>
               </div>
             </div>
-          </div>
-        </AutoAdvance>
+          </AutoAdvance>
+          {reporting && (
+            <ReportModal
+              card={card}
+              userAnswer={answer}
+              quizMode="recall"
+              onClose={() => { setReporting(false); onResult(1); }}
+            />
+          )}
+        </>
       )}
     </div>
   );
@@ -219,12 +243,14 @@ function ReverseQuiz({ card, onResult, speak }) {
   const [answer, setAnswer] = useState('');
   const [phase, setPhase] = useState('input');
   const [animKey, setAnimKey] = useState(0);
+  const [reporting, setReporting] = useState(false);
   const inputRef = useRef(null);
 
   useEffect(() => {
     setAnswer('');
     setPhase('input');
     setAnimKey(k => k + 1);
+    setReporting(false);
   }, [card.kr]);
 
   function submit() {
@@ -284,33 +310,56 @@ function ReverseQuiz({ card, onResult, speak }) {
       )}
 
       {(phase === 'correct' || phase === 'wrong') && (
-        <AutoAdvance
-          key={`result-${animKey}`}
-          delay={phase === 'correct' ? 700 : 1400}
-          onAdvance={() => onResult(phase === 'correct' ? 4 : 1)}
-        >
-          <div className={phase === 'correct' ? 'anim-pop' : 'anim-shake'} style={{ marginTop: 32 }}>
-            <div style={{
-              background: phase === 'correct' ? 'rgba(48,209,88,0.08)' : 'rgba(255,55,95,0.08)',
-              border: `1px solid ${phase === 'correct' ? 'rgba(48,209,88,0.3)' : 'rgba(255,55,95,0.3)'}`,
-              borderRadius: 'var(--radius)',
-              padding: '16px',
-            }}>
-              <div style={{ color: phase === 'correct' ? 'var(--green)' : 'var(--red)', fontSize: '0.78rem', marginBottom: 8 }}>
-                {phase === 'correct' ? '✓ Correct' : '✗ Incorrect'}
+        <>
+          <AutoAdvance
+            key={`result-${animKey}`}
+            delay={phase === 'correct' ? 700 : 1400}
+            onAdvance={() => onResult(phase === 'correct' ? 4 : 1)}
+            paused={reporting}
+          >
+            <div className={phase === 'correct' ? 'anim-pop' : 'anim-shake'} style={{ marginTop: 32 }}>
+              <div style={{
+                background: phase === 'correct' ? 'rgba(48,209,88,0.08)' : 'rgba(255,55,95,0.08)',
+                border: `1px solid ${phase === 'correct' ? 'rgba(48,209,88,0.3)' : 'rgba(255,55,95,0.3)'}`,
+                borderRadius: 'var(--radius)',
+                padding: '16px',
+              }}>
+                <div style={{ color: phase === 'correct' ? 'var(--green)' : 'var(--red)', fontSize: '0.78rem', marginBottom: 8 }}>
+                  {phase === 'correct' ? '✓ Correct' : '✗ Incorrect'}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ fontSize: '1.6rem', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 700 }}>{card.kr}</div>
+                  <button
+                    onClick={() => speak(card.kr)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: '1rem', padding: '2px 4px' }}
+                    title="Pronounce"
+                  >♪</button>
+                </div>
+                <div style={{ fontSize: '0.82rem', color: 'var(--text3)', marginTop: 4, fontStyle: 'italic' }}>{card.rom}</div>
+                {phase === 'wrong' && (
+                  <button
+                    onClick={() => setReporting(true)}
+                    style={{
+                      marginTop: 10, background: 'none', border: 'none',
+                      cursor: 'pointer', color: 'var(--text3)', fontSize: '0.72rem',
+                      padding: 0, textDecoration: 'underline',
+                    }}
+                  >
+                    Report issue
+                  </button>
+                )}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ fontSize: '1.6rem', fontFamily: "'Noto Sans KR', sans-serif", fontWeight: 700 }}>{card.kr}</div>
-                <button
-                  onClick={() => speak(card.kr)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontSize: '1rem', padding: '2px 4px' }}
-                  title="Pronounce"
-                >♪</button>
-              </div>
-              <div style={{ fontSize: '0.82rem', color: 'var(--text3)', marginTop: 4, fontStyle: 'italic' }}>{card.rom}</div>
             </div>
-          </div>
-        </AutoAdvance>
+          </AutoAdvance>
+          {reporting && (
+            <ReportModal
+              card={card}
+              userAnswer={answer}
+              quizMode="reverse"
+              onClose={() => { setReporting(false); onResult(1); }}
+            />
+          )}
+        </>
       )}
     </div>
   );

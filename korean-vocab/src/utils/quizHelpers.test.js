@@ -131,6 +131,15 @@ describe('flexMatch', () => {
     expect(flexMatch('99', 'hello')).toBe(false);
   });
 
+  // Variant normalization
+  it('"ok" matches "okay"', () => {
+    expect(flexMatch('ok', "it's okay")).toBe(true);
+  });
+
+  it('"its ok" matches "it\'s okay"', () => {
+    expect(flexMatch("its ok", "it's okay")).toBe(true);
+  });
+
   // alt (synonym) matching
   it('matches an alt when correct does not match', () => {
     expect(flexMatch('thanks', 'thank you', ['thanks', 'cheers'])).toBe(true);
