@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { shuffle, buildQueue, flexMatch } from '../utils/quizHelpers';
+import { shuffle, buildQueue, flexMatch, romFlexMatch } from '../utils/quizHelpers';
 import { useSpeech } from '../hooks/useSpeech';
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -26,7 +26,7 @@ function RecallQuiz({ card, onResult, speak }) {
 
   function submit() {
     if (!answer.trim()) return;
-    const ok = flexMatch(answer, card.en);
+    const ok = flexMatch(answer, card.en, card.alt || []);
     setPhase(ok ? 'correct' : 'wrong');
     setAnimKey(k => k + 1);
   }
@@ -229,8 +229,7 @@ function ReverseQuiz({ card, onResult, speak }) {
 
   function submit() {
     if (!answer.trim()) return;
-    const a = answer.trim().toLowerCase();
-    const ok = a === card.kr || a === card.rom.toLowerCase();
+    const ok = romFlexMatch(answer, card);
     setPhase(ok ? 'correct' : 'wrong');
     setAnimKey(k => k + 1);
   }
